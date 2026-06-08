@@ -1,0 +1,11 @@
+{
+  "name": "coach-vision",
+  "version": "1.0.0",
+  "description": "Assistant tactique football IA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}

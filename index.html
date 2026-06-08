@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Coach Vision</title>
+
+<!-- PWA Meta Tags -->
+<meta name="application-name" content="Coach Vision"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CoachVision"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#00e5a0"/>
+<meta name="description" content="Assistant tactique football IA — Séances, analyses, compositions"/>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json"/>
+
+<!-- Apple Touch Icons -->
+<link rel="apple-touch-icon" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d14;--bg2:#0f1320;--bg3:#151b2e;
+  --surf:#1a2235;--surf2:#1f2940;
+  --bord:#2a3550;--bord2:#354060;
+  --acc:#00e5a0;--acc2:#00c488;--acc-d:rgba(0,229,160,.12);--acc-d2:rgba(0,229,160,.05);
+  --gold:#f5c842;--gold-d:rgba(245,200,66,.12);
+  --red:#ff4d6d;--red-d:rgba(255,77,109,.12);
+  --blue:#4d9fff;--blue-d:rgba(77,159,255,.12);
+  --purple:#a78bfa;--purple-d:rgba(167,139,250,.12);
+  --orange:#f97316;--orange-d:rgba(249,115,22,.12);
+  --txt:#e8edf5;--txt2:#8b96b0;--txt3:#5a6480;
+  --fd:"Syne",sans-serif;--fb:"DM Sans",sans-serif;
+  --r:12px;--rs:8px;--sh:0 4px 24px rgba(0,0,0,.4);
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);min-height:100vh;min-height:100dvh}
+/* Safe area for mobile notch/home bar */
+.topbar{padding-top:max(11px, env(safe-area-inset-top, 11px))!important}
+.sidebar{padding-top:env(safe-area-inset-top, 0)}
+.mob-nav{padding-bottom:max(5px, env(safe-area-inset-bottom, 5px))!important}
+.main{padding-bottom:calc(60px + env(safe-area-inset-bottom, 0))}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:224px;min-width:224px;background:var(--bg2);border-right:1px solid var(--bord);display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s ease;z-index:50}
+.logo{padding:16px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--acc);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-family:var(--fd);font-size:15px;font-weight:800;line-height:1.1}
+.logo-sub{font-size:9px;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase}
+.nav-sec{padding:10px 10px 2px}
+.nav-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);font-weight:600;padding:0 8px;margin-bottom:3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:var(--txt2);font-size:13px;font-weight:500;transition:all .2s;margin-bottom:1px;position:relative;user-select:none}
+.nav-item:hover{background:var(--surf);color:var(--txt)}
+.nav-item.active{background:var(--acc-d);color:var(--acc)}
+.nav-item.active::before{content:"";position:absolute;left:0;top:22%;bottom:22%;width:3px;background:var(--acc);border-radius:0 3px 3px 0}
+.nav-ico{width:15px;height:15px;flex-shrink:0}
+.sidebar-foot{margin-top:auto;padding:10px;border-top:1px solid var(--bord)}
+.user-card{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--rs);background:var(--surf)}
+.avatar-sm{width:30px;height:30px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:800;color:var(--bg);flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{padding:11px 18px;border-bottom:1px solid var(--bord);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+.topbar-left{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.topbar-title{font-family:var(--fd);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-sub{font-size:11px;color:var(--txt3);white-space:nowrap}
+.hamburger{background:var(--surf);border:1px solid var(--bord);border-radius:var(--rs);padding:7px;cursor:pointer;display:none;flex-shrink:0;align-items:center;justify-content:center}
+.content{flex:1;overflow-y:auto;padding:18px}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:40;backdrop-filter:blur(3px)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rs);font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn-p{background:var(--acc);color:var(--bg)}.btn-p:hover{background:var(--acc2);box-shadow:0 0 18px rgba(0,229,160,.25)}
+.btn-s{background:var(--surf2);color:var(--txt);border:1px solid var(--bord2)}.btn-s:hover{background:var(--surf)}
+.btn-g{background:transparent;color:var(--txt2);border:1px solid var(--bord)}.btn-g:hover{background:var(--surf);color:var(--txt)}
+.btn-d{background:var(--red-d);color:var(--red);border:1px solid rgba(255,77,109,.2)}
+.btn-sm{padding:5px 10px;font-size:12px}.btn-xs{padding:3px 7px;font-size:11px}
+.btn-ico{padding:6px;border-radius:var(--rs);background:var(--surf);color:var(--txt2);cursor:pointer;border:1px solid var(--bord);display:inline-flex;transition:all .2s;flex-shrink:0}
+.btn-ico:hover{background:var(--surf2);color:var(--txt)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);padding:15px}
+.card-h{transition:all .2s;cursor:pointer}.card-h:hover{border-color:var(--bord2);transform:translateY(-1px);box-shadow:var(--sh)}
+.card-acc{border-color:rgba(0,229,160,.22);background:var(--acc-d2)}
+.card-gold{border-color:rgba(245,200,66,.2);background:rgba(245,200,66,.04)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:11px}
+.stat{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:11px}
+.stat-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-n{font-family:var(--fd);font-size:22px;font-weight:800;line-height:1}
+.stat-l{font-size:11px;color:var(--txt3);margin-top:2px}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.t-g{background:var(--acc-d);color:var(--acc)}.t-go{background:var(--gold-d);color:var(--gold)}
+.t-r{background:var(--red-d);color:var(--red)}.t-b{background:var(--blue-d);color:var(--blue)}
+.t-gr{background:var(--surf2);color:var(--txt2)}.t-p{background:var(--purple-d);color:var(--purple)}
+.t-o{background:var(--orange-d);color:var(--orange)}
+.fg{margin-bottom:11px}
+.fl{display:block;font-size:11px;font-weight:700;color:var(--txt2);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase}
+.fi{width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:8px 12px;color:var(--txt);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--acc)}
+.fs{width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:8px 12px;color:var(--txt);font-family:var(--fb);font-size:13px;outline:none;cursor:pointer;appearance:none}
+.fs:focus{border-color:var(--acc)}
+.fta{width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:8px 12px;color:var(--txt);font-family:var(--fb);font-size:13px;outline:none;resize:vertical;min-height:72px}
+.fta:focus{border-color:var(--acc)}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--bord2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--acc);cursor:pointer}
+.rating-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rating-lbl{font-size:12px;color:var(--txt2);width:130px;flex-shrink:0}
+.rating-bar{flex:1;height:5px;background:var(--bord2);border-radius:3px;overflow:hidden}
+.rating-fill{height:100%;border-radius:3px;transition:width .4s}
+.rating-num{font-size:12px;font-weight:800;min-width:20px;text-align:right;font-family:var(--fd)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(5px)}
+.modal{background:var(--bg2);border:1px solid var(--bord);border-radius:16px;width:95%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.modal-lg{max-width:700px}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:15px 19px;border-bottom:1px solid var(--bord);position:sticky;top:0;background:var(--bg2);z-index:1}
+.mt{font-family:var(--fd);font-size:15px;font-weight:700}
+.mb{padding:19px}
+.mf{padding:11px 19px;border-top:1px solid var(--bord);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--bg2)}
+.pitch-wrap{position:relative;border-radius:var(--r);overflow:hidden;border:2px solid var(--bord)}
+.pitch-svg{width:100%;display:block;user-select:none}
+.ai-panel{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);display:flex;flex-direction:column}
+.ai-msgs{overflow-y:auto;padding:11px;display:flex;flex-direction:column;gap:8px}
+.ai-msg{display:flex;gap:7px}.ai-msg.user{flex-direction:row-reverse}
+.ai-bub{max-width:84%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.55;white-space:pre-wrap}
+.ai-msg.ai .ai-bub{background:var(--bg2);color:var(--txt);border-bottom-left-radius:3px}
+.ai-msg.user .ai-bub{background:var(--acc);color:var(--bg);font-weight:500;border-bottom-right-radius:3px}
+.ai-ir{padding:8px;border-top:1px solid var(--bord);display:flex;gap:6px}
+.ai-in{flex:1;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:8px 11px;color:var(--txt);font-family:var(--fb);font-size:12px;outline:none}
+.ai-in:focus{border-color:var(--acc)}
+.divider{height:1px;background:var(--bord);margin:14px 0}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:10px;text-align:center}
+.empty-ico{width:54px;height:54px;border-radius:14px;background:var(--surf);border:1px solid var(--bord);display:flex;align-items:center;justify-content:center}
+.sec-title{font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:10px}
+.pb{height:4px;background:var(--surf2);border-radius:2px;overflow:hidden;margin-top:3px}
+.pbf{height:100%;background:var(--acc);border-radius:2px;transition:width .4s}
+.tabs{display:flex;gap:2px;background:var(--bg2);border-radius:var(--rs);padding:3px;border:1px solid var(--bord);flex-wrap:wrap;margin-bottom:15px}
+.tab{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--txt3);white-space:nowrap}
+.tab.active{background:var(--surf);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.spin{animation:sp 1s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.fade{animation:fd .22s ease}
+@keyframes fd{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bord);padding:5px 2px;z-index:60}
+.mob-nav-inner{display:flex}
+.mob-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 1px;border-radius:var(--rs);cursor:pointer;color:var(--txt3);font-size:9px;font-weight:600;transition:all .2s;text-align:center}
+.mob-item.active{color:var(--acc)}
+.mob-item svg{width:18px;height:18px}
+.tac-card{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);padding:13px;cursor:pointer;transition:all .2s}
+.tac-card:hover{border-color:var(--acc);background:var(--acc-d2)}
+@media(max-width:768px){
+  .sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .hamburger{display:flex}
+  .content{padding:12px}
+  .g2{grid-template-columns:1fr}
+  .g3,.g4{grid-template-columns:1fr 1fr}
+  .mob-nav{display:block}
+  .main{padding-bottom:60px}
+  .topbar{padding:9px 12px}
+}
+@media(max-width:400px){.g3,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar-overlay" id="sb-ov" onclick="closeSB()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0a0d14"><circle cx="12" cy="12" r="9"/><polygon points="12,4 14,9 20,9 15,13 17,19 12,15 7,19 9,13 4,9 10,9" fill="#0a0d14" opacity=".88"/></svg>
+      </div>
+      <div><div class="logo-name">Coach Vision</div><div class="logo-sub">AI Football</div></div>
+    </div>
+    <div id="sb-nav"></div>
+    <div class="sidebar-foot">
+      <div class="user-card">
+        <div class="avatar-sm">CV</div>
+        <div><div style="font-size:12px;font-weight:600">Entraîneur</div><div style="font-size:10px;color:var(--txt3)">Coach Vision Pro</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger btn-ico" onclick="toggleSB()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div><div class="topbar-title" id="pg-title">Tableau de bord</div><div class="topbar-sub" id="pg-sub">Coach Vision</div></div>
+      </div>
+      <span class="tag t-g" style="font-size:10px;flex-shrink:0">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>IA Active
+      </span>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+  <div class="mob-nav"><div class="mob-nav-inner" id="mob-nav"></div></div>
+</div>
+<div class="overlay" id="mod-ov" style="display:none" onclick="closeMod()">
+  <div id="mod-box" onclick="event.stopPropagation()"></div>
+</div>
+<div class="overlay" id="assign-ov" style="display:none" onclick="closeAssign()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:410px">
+    <div class="mh"><span class="mt" id="assign-title">Assigner</span><button class="btn-ico" onclick="closeAssign()">&#x2715;</button></div>
+    <div class="mb" id="assign-body"></div>
+  </div>
+</div>
+<script>
+
+// ═══ STATE ════════════════════════════════════════════════════
+const S={
+  page:'dashboard',
+  players:JSON.parse(localStorage.getItem('cv_players')||'[]'),
+  sessions:JSON.parse(localStorage.getItem('cv_sessions')||'[]'),
+  exercises:JSON.parse(localStorage.getItem('cv_exercises')||JSON.stringify([
+    {id:1,name:"Rondo 5v2",objective:"Possession",players:7,duration:12,description:"Carré 10x10m. 5 joueurs conservent contre 2 défenseurs. Objectif : 8 passes consécutives.",goalkeeper:false},
+    {id:2,name:"Pressing collectif 4v4+GK",objective:"Pressing",players:9,duration:15,description:"Demi-terrain. Équipe qui perd le ballon doit presser en moins de 5 secondes.",goalkeeper:true},
+    {id:3,name:"Finition sur centre",objective:"Finition",players:8,duration:12,description:"Centres depuis les côtés. Travail du timing de course et de la frappe.",goalkeeper:true},
+    {id:4,name:"Transition 3v3+Jokers",objective:"Transition",players:8,duration:15,description:"Deux petites cages. Jokers avec l'équipe en possession.",goalkeeper:false},
+    {id:5,name:"Conservation sous pression",objective:"Conservation",players:10,duration:10,description:"Zone 20x20m. 1 point toutes les 10 passes. Haute intensité.",goalkeeper:false},
+    {id:6,name:"Bloc défensif 6v6",objective:"Défense",players:12,duration:18,description:"Travail du bloc médian 4-2. Réorganisation rapide après perte.",goalkeeper:false},
+  ])),
+  opponents:JSON.parse(localStorage.getItem('cv_opponents')||'[]'),
+  reports:JSON.parse(localStorage.getItem('cv_reports')||'[]'),
+  tac:{myF:'4-3-3',oppF:'4-4-2',myAssign:{},myStr:'',myWk:'',oppStr:'',oppWk:'',analysis:'',tab:'setup'},
+  _libFilter:'Tous',_aiMsgs:[],_compAvail:null,
+};
+function save(){['players','sessions','exercises','opponents','reports'].forEach(k=>localStorage.setItem('cv_'+k,JSON.stringify(S[k])));}
+
+// ═══ FORMATIONS ═══════════════════════════════════════════════
+const FORM={
+  '4-3-3':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'LB',label:'AG',x:14,y:73,role:'Arrière Gauche'},{id:'CB1',label:'DC',x:34,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:66,y:77,role:'Défenseur Central'},{id:'RB',label:'AD',x:86,y:73,role:'Arrière Droit'},{id:'CM1',label:'MC',x:24,y:55,role:'Milieu Central'},{id:'CM2',label:'MC',x:50,y:52,role:'Milieu Central'},{id:'CM3',label:'MC',x:76,y:55,role:'Milieu Central'},{id:'LW',label:'AG',x:15,y:28,role:'Ailier Gauche'},{id:'ST',label:'BU',x:50,y:20,role:'Avant-Centre'},{id:'RW',label:'AD',x:85,y:28,role:'Ailier Droit'}],
+  '4-4-2':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'LB',label:'AG',x:14,y:73,role:'Arrière Gauche'},{id:'CB1',label:'DC',x:34,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:66,y:77,role:'Défenseur Central'},{id:'RB',label:'AD',x:86,y:73,role:'Arrière Droit'},{id:'LM',label:'MG',x:14,y:53,role:'Milieu Gauche'},{id:'CM1',label:'MC',x:37,y:56,role:'Milieu Central'},{id:'CM2',label:'MC',x:63,y:56,role:'Milieu Central'},{id:'RM',label:'MD',x:86,y:53,role:'Milieu Droit'},{id:'ST1',label:'BU',x:35,y:20,role:'Avant-Centre'},{id:'ST2',label:'BU',x:65,y:20,role:'Avant-Centre'}],
+  '4-2-3-1':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'LB',label:'AG',x:14,y:73,role:'Arrière Gauche'},{id:'CB1',label:'DC',x:34,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:66,y:77,role:'Défenseur Central'},{id:'RB',label:'AD',x:86,y:73,role:'Arrière Droit'},{id:'DM1',label:'MDéf',x:36,y:62,role:'Milieu Défensif'},{id:'DM2',label:'MDéf',x:64,y:62,role:'Milieu Défensif'},{id:'LAM',label:'MAG',x:18,y:43,role:'Milieu Offensif'},{id:'CAM',label:'MOC',x:50,y:39,role:'Milieu Offensif'},{id:'RAM',label:'MAD',x:82,y:43,role:'Milieu Offensif'},{id:'ST',label:'BU',x:50,y:19,role:'Avant-Centre'}],
+  '3-5-2':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'CB1',label:'DC',x:24,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:50,y:79,role:'Défenseur Central'},{id:'CB3',label:'DC',x:76,y:77,role:'Défenseur Central'},{id:'LWB',label:'PIG',x:8,y:57,role:'Piston Gauche'},{id:'CM1',label:'MC',x:29,y:54,role:'Milieu Central'},{id:'CM2',label:'MC',x:50,y:50,role:'Milieu Central'},{id:'CM3',label:'MC',x:71,y:54,role:'Milieu Central'},{id:'RWB',label:'PID',x:92,y:57,role:'Piston Droit'},{id:'ST1',label:'BU',x:35,y:20,role:'Avant-Centre'},{id:'ST2',label:'BU',x:65,y:20,role:'Avant-Centre'}],
+  '5-3-2':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'LWB',label:'PIG',x:8,y:71,role:'Piston Gauche'},{id:'CB1',label:'DC',x:27,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:50,y:79,role:'Défenseur Central'},{id:'CB3',label:'DC',x:73,y:77,role:'Défenseur Central'},{id:'RWB',label:'PID',x:92,y:71,role:'Piston Droit'},{id:'CM1',label:'MC',x:28,y:52,role:'Milieu Central'},{id:'CM2',label:'MC',x:50,y:49,role:'Milieu Central'},{id:'CM3',label:'MC',x:72,y:52,role:'Milieu Central'},{id:'ST1',label:'BU',x:35,y:20,role:'Avant-Centre'},{id:'ST2',label:'BU',x:65,y:20,role:'Avant-Centre'}],
+  '4-1-4-1':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'LB',label:'AG',x:14,y:73,role:'Arrière Gauche'},{id:'CB1',label:'DC',x:34,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:66,y:77,role:'Défenseur Central'},{id:'RB',label:'AD',x:86,y:73,role:'Arrière Droit'},{id:'DM',label:'MDéf',x:50,y:63,role:'Milieu Défensif'},{id:'LM',label:'MG',x:14,y:48,role:'Milieu Gauche'},{id:'CM1',label:'MC',x:37,y:51,role:'Milieu Central'},{id:'CM2',label:'MC',x:63,y:51,role:'Milieu Central'},{id:'RM',label:'MD',x:86,y:48,role:'Milieu Droit'},{id:'ST',label:'BU',x:50,y:19,role:'Avant-Centre'}],
+  '3-4-1-2':[{id:'GK',label:'GK',x:50,y:89,role:'Gardien'},{id:'CB1',label:'DC',x:24,y:77,role:'Défenseur Central'},{id:'CB2',label:'DC',x:50,y:79,role:'Défenseur Central'},{id:'CB3',label:'DC',x:76,y:77,role:'Défenseur Central'},{id:'LWB',label:'PIG',x:10,y:60,role:'Piston Gauche'},{id:'CM1',label:'MC',x:32,y:57,role:'Milieu Central'},{id:'CM2',label:'MC',x:68,y:57,role:'Milieu Central'},{id:'RWB',label:'PID',x:90,y:60,role:'Piston Droit'},{id:'CAM',label:'MOC',x:50,y:40,role:'Milieu Offensif'},{id:'ST1',label:'BU',x:36,y:22,role:'Avant-Centre'},{id:'ST2',label:'BU',x:64,y:22,role:'Avant-Centre'}],
+};
+const POSITIONS=['Gardien','Défenseur Central','Arrière Gauche','Arrière Droit','Piston Gauche','Piston Droit','Milieu Défensif','Milieu Central','Milieu Offensif','Milieu Gauche','Milieu Droit','Ailier Gauche','Ailier Droit','Avant-Centre'];
+const OBJECTIVES=['Conservation','Pressing','Finition','Transition','Possession','Duels','Jeu en largeur','Contre-attaque','Défense','Phases arrêtées'];
+const CATEGORIES=['U7','U9','U11','U13','U15','U18','Seniors'];
+const LEVELS=['Débutant','Intermédiaire','Avancé'];
+const SKILLS=[
+  {key:'technique',label:'Technique balle',color:'#00e5a0'},
+  {key:'vitesse',label:'Vitesse',color:'#4d9fff'},
+  {key:'physique',label:'Physique / Endurance',color:'#f97316'},
+  {key:'finition',label:'Finition',color:'#ff4d6d'},
+  {key:'passe',label:'Qualité de passe',color:'#a78bfa'},
+  {key:'vision',label:'Vision du jeu',color:'#f5c842'},
+  {key:'placement',label:'Placement',color:'#34d399'},
+  {key:'duel',label:'Duels',color:'#60a5fa'},
+  {key:'aerial',label:'Jeu aérien',color:'#fb923c'},
+  {key:'leadership',label:'Leadership',color:'#e879f9'},
+  {key:'attitude',label:'Attitude / Sérieux',color:'#00e5a0'},
+  {key:'pressing',label:'Pressing',color:'#ff4d6d'},
+  {key:'defense',label:'Défense / Repli',color:'#4d9fff'},
+  {key:'creativity',label:'Créativité',color:'#f5c842'},
+  {key:'acceleration',label:'Accélération',color:'#f97316'},
+  {key:'anticipation',label:'Anticipation',color:'#a78bfa'},
+];
+const PC={'Gardien':'#f5c842','Défenseur Central':'#4d9fff','Arrière Gauche':'#60a5fa','Arrière Droit':'#60a5fa','Milieu Défensif':'#a78bfa','Milieu Central':'#a78bfa','Milieu Offensif':'#f97316','Milieu Gauche':'#a78bfa','Milieu Droit':'#a78bfa','Ailier Gauche':'#00e5a0','Ailier Droit':'#00e5a0','Avant-Centre':'#ff4d6d','Piston Gauche':'#34d399','Piston Droit':'#34d399'};
+
+// ═══ NAV CONFIG ═══════════════════════════════════════════════
+const NAV=[
+  {s:'Principal',items:[{id:'dashboard',label:'Tableau de bord',ic:'home'},{id:'team-db',label:'Dashboard Équipe',ic:'shield'}]},
+  {s:'Joueurs',items:[{id:'players',label:'Base de joueurs',ic:'user'},{id:'composition',label:'Compo IA',ic:'users'}]},
+  {s:'Entraînement',items:[{id:'sessions',label:'Séances',ic:'cal'},{id:'library',label:'Bibliothèque',ic:'book'},{id:'tac-lib',label:'Biblio. Tactique',ic:'bulb'}]},
+  {s:'Match',items:[{id:'tactical',label:'Analyse Tactique',ic:'target'},{id:'prematch',label:'Avant-match IA',ic:'zap'},{id:'speech',label:'Causerie',ic:'mic'},{id:'situation',label:'Situations de jeu',ic:'clock'},{id:'opponents',label:'Adversaires',ic:'flag'}]},
+  {s:'Suivi',items:[{id:'reports',label:'Rapports de match',ic:'clip'}]},
+];
+const PI={
+  dashboard:{t:'Tableau de bord',s:'Vue d\'ensemble & Assistant IA'},
+  'team-db':{t:'Dashboard Équipe',s:'Analyse collective'},
+  players:{t:'Base de joueurs',s:'Profils détaillés & progressions'},
+  composition:{t:'Compo IA',s:'Assistant de composition'},
+  sessions:{t:'Séances',s:'Planifiez vos entraînements'},
+  library:{t:'Bibliothèque',s:'Catalogue d\'exercices'},
+  'tac-lib':{t:'Bibliothèque Tactique',s:'Apprenez les systèmes'},
+  tactical:{t:'Analyse Tactique',s:'Terrain interactif & IA'},
+  prematch:{t:'Avant-match IA',s:'Analyse et stratégie pré-match'},
+  speech:{t:'Causerie',s:'Discours d\'avant-match'},
+  situation:{t:'Situations de jeu',s:'Analyse de scénarios'},
+  opponents:{t:'Adversaires',s:'Fiches de renseignements'},
+  reports:{t:'Rapports de match',s:'Analysez vos performances'},
+};
+const MOB=[
+  {id:'dashboard',label:'Accueil',ic:'home'},
+  {id:'players',label:'Joueurs',ic:'user'},
+  {id:'tactical',label:'Tactique',ic:'target'},
+  {id:'prematch',label:'Avant-match',ic:'zap'},
+  {id:'sessions',label:'Séances',ic:'cal'},
+];
+
+// ═══ ICONS ════════════════════════════════════════════════════
+function ic(name,sz=14){
+  const d={
+    home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+    shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+    clip:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+    bulb:'<line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>',
+    plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    back:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+    check:'<polyline points="20 6 9 17 4 12"/>',
+    search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+    chevron:'<polyline points="9 18 15 12 9 6"/>',
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    refresh:'<polyline points="23 4 23 10 17 10"/><path d="M1 20l4.64-4.36A9 9 0 0 0 20.49 15"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/>',
+  };
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d[name]||''}</svg>`;
+}
+
+// ═══ NAVIGATION ════════════════════════════════════════════════
+function buildNav(){
+  document.getElementById('sb-nav').innerHTML=NAV.map(sec=>`
+    <div class="nav-sec">
+      <div class="nav-lbl">${sec.s}</div>
+      ${sec.items.map(it=>`<div class="nav-item ${S.page===it.id?'active':''}" onclick="nav('${it.id}')">${ic(it.ic,14)} ${it.label}</div>`).join('')}
+    </div>`).join('');
+  document.getElementById('mob-nav').innerHTML=MOB.map(it=>`<div class="mob-item ${S.page===it.id?'active':''}" onclick="nav('${it.id}')">${ic(it.ic,18)}<span>${it.label}</span></div>`).join('');
+}
+function nav(page){
+  S.page=page;buildNav();
+  const p=PI[page]||{t:page,s:''};
+  document.getElementById('pg-title').textContent=p.t;
+  document.getElementById('pg-sub').textContent=p.s;
+  document.getElementById('content').innerHTML='';
+  document.getElementById('content').className='content fade';
+  closeSB();
+  const pages={dashboard:pgDash,'team-db':pgTeamDB,players:pgPlayers,composition:pgComp,sessions:pgSessions,library:pgLib,'tac-lib':pgTacLib,tactical:pgTactical,prematch:pgPrematch,speech:pgSpeech,situation:pgSit,opponents:pgOpponents,reports:pgReports};
+  if(pages[page])pages[page]();
+}
+function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-ov').classList.toggle('open');}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('open');}
+
+// ═══ API ══════════════════════════════════════════════════════
+// ═══ API CALL — via proxy local /api/claude ══════════════════
+async function callAI(sys, usr, maxTok=1400){
+  // Détecte si on est sur le serveur local ou sur Netlify
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const endpoint = isLocal ? '/api/claude' : 'https://api.anthropic.com/v1/messages';
+  const headers = {'Content-Type': 'application/json'};
+  if(!isLocal) headers['anthropic-dangerous-direct-browser-access'] = 'true';
+
+  let r;
+  try {
+    r = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTok,
+        system: sys,
+        messages: [{ role: 'user', content: usr }]
+      })
+    });
+  } catch(err) {
+    showToast('Erreur réseau. Serveur démarré ? (node server.js)', '#ff4d6d');
+    throw new Error('NETWORK_ERROR');
+  }
+  if(!r.ok){
+    const e = await r.json().catch(()=>({}));
+    const msg = e?.error?.message || 'Erreur ' + r.status;
+    showToast('Erreur IA : ' + msg, '#ff4d6d');
+    throw new Error(msg);
+  }
+  const d = await r.json();
+  return d.content?.[0]?.text || '';
+}
+
+function showToast(msg, color='#00e5a0'){
+  // Remove existing toast
+  document.querySelectorAll('.cv-toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'cv-toast';
+  t.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color};color:${color==='#00e5a0'?'#000':'#fff'};padding:10px 18px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fd .3s ease;max-width:90vw;text-align:center;white-space:nowrap`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ═══ MODAL ════════════════════════════════════════════════════
+function openMod(html,cls=''){document.getElementById('mod-box').className='modal '+(cls||'');document.getElementById('mod-box').innerHTML=html;document.getElementById('mod-ov').style.display='flex';}
+function closeMod(){document.getElementById('mod-ov').style.display='none';}
+
+// ═══ HELPERS ══════════════════════════════════════════════════
+function initials(n){return(n||'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
+function pCol(pos){return PC[pos]||'#00e5a0';}
+function skColor(v){return v>=8?'#00e5a0':v>=6?'#f5c842':v>=4?'#f97316':'#ff4d6d';}
+function ovRating(p){const vals=SKILLS.map(s=>p.skills?.[s.key]||0).filter(v=>v>0);return vals.length?Math.round(vals.reduce((a,b)=>a+b)/vals.length*10)/10:0;}
+function portrait(p,sz=44){const col=pCol(p.position);return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:${Math.floor(sz*.32)}px;font-weight:800;color:${col};flex-shrink:0">${initials(p.name)}</div>`;}
+function rBar(label,val,col){return `<div class="rating-row"><div class="rating-lbl">${label}</div><div class="rating-bar"><div class="rating-fill" style="width:${val*10}%;background:${col||skColor(val)}"></div></div><div class="rating-num" style="color:${skColor(val)}">${val}</div></div>`;}
+function pitchSVG(fk,assign={},color='#00e5a0',inter=false,pid='p1'){
+  const W=400,H=560,pos=(FORM[fk]||FORM['4-3-3']);
+  const px=p=>(p/100)*W,py=p=>(p/100)*H;
+  const nodes=pos.map((p,i)=>{
+    const pl=assign[p.id]?S.players.find(x=>x.id===assign[p.id]):null;
+    const col=i===0?'#f5c842':color,lbl=pl?initials(pl.name):(i+1)+'',has=!!pl;
+    const ring=has?`<circle cx="${px(p.x)}" cy="${py(p.y)}" r="21" fill="none" stroke="${col}" stroke-width="1.5" opacity=".45"/>`:
+      (inter?`<circle cx="${px(p.x)}" cy="${py(p.y)}" r="20" fill="${col}0a" stroke="${col}44" stroke-width="1.5" stroke-dasharray="3 2"/>`:'');
+    const nm=pl?`<text x="${px(p.x)}" y="${py(p.y)+28}" text-anchor="middle" fill="white" font-size="8" font-weight="600" font-family="DM Sans,sans-serif" paint-order="stroke" stroke="rgba(0,0,0,.8)" stroke-width="2.5">${pl.name.split(' ')[0]}</text>`:
+      `<text x="${px(p.x)}" y="${py(p.y)+25}" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="DM Sans,sans-serif">${p.label}</text>`;
+    const clk=inter?`onclick="openAssign('${p.id}','${p.label}','${fk}')" style="cursor:pointer"`:'' ;
+    return `<g ${clk}>${ring}<circle cx="${px(p.x)}" cy="${py(p.y)}" r="17" fill="${col}${has?'':'77'}" stroke="rgba(255,255,255,${has?.9:.4})" stroke-width="2"/><text x="${px(p.x)}" y="${py(p.y)+1}" text-anchor="middle" dominant-baseline="middle" fill="#000" font-size="${lbl.length>2?7:9}" font-weight="800" font-family="Syne,sans-serif">${lbl}</text>${nm}</g>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" class="pitch-svg" id="${pid}" xmlns="http://www.w3.org/2000/svg">
+  <defs><pattern id="gr${pid}" patternUnits="userSpaceOnUse" width="44" height="44"><rect width="44" height="44" fill="#1a6b3a"/><rect width="44" height="22" fill="#1d7340"/></pattern></defs>
+  <rect width="${W}" height="${H}" fill="url(#gr${pid})"/>
+  <g stroke="rgba(255,255,255,.58)" stroke-width="1.5" fill="none">
+    <rect x="18" y="16" width="${W-36}" height="${H-32}" rx="2"/>
+    <line x1="18" y1="${H/2}" x2="${W-18}" y2="${H/2}"/>
+    <circle cx="${W/2}" cy="${H/2}" r="44"/>
+    <circle cx="${W/2}" cy="${H/2}" r="3" fill="rgba(255,255,255,.58)"/>
+    <rect x="102" y="16" width="196" height="64"/><rect x="142" y="16" width="116" height="26"/>
+    <rect x="102" y="${H-80}" width="196" height="64"/><rect x="142" y="${H-42}" width="116" height="26"/>
+    <rect x="158" y="6" width="84" height="12" stroke-width="2"/>
+    <rect x="158" y="${H-18}" width="84" height="12" stroke-width="2"/>
+  </g>
+  <circle cx="${W/2}" cy="${H/2-1}" r="7" fill="white" stroke="#ccc" stroke-width="1"/>
+  ${nodes.join('')}
+  <text x="${W/2}" y="${H-4}" text-anchor="middle" fill="rgba(255,255,255,.32)" font-size="11" font-family="Syne,sans-serif" font-weight="700">${fk}</text>
+</svg>`;
+}
+
+// ═══ ASSIGN ════════════════════════════════════════════════════
+function openAssign(posId,posLbl,fk){
+  S._at={posId,fk};
+  const pos=(FORM[fk]||[]).find(p=>p.id===posId);
+  document.getElementById('assign-title').textContent=`${posLbl} – ${pos?.role||''}`;
+  const COMPAT={'Gardien':['Gardien'],'Défenseur Central':['Défenseur Central'],'Arrière Gauche':['Arrière Gauche','Défenseur Central'],'Arrière Droit':['Arrière Droit','Défenseur Central'],'Piston Gauche':['Piston Gauche','Arrière Gauche','Milieu Central'],'Piston Droit':['Piston Droit','Arrière Droit','Milieu Central'],'Milieu Défensif':['Milieu Défensif','Milieu Central'],'Milieu Central':['Milieu Central','Milieu Défensif','Milieu Offensif'],'Milieu Gauche':['Milieu Gauche','Milieu Central'],'Milieu Droit':['Milieu Droit','Milieu Central'],'Milieu Offensif':['Milieu Offensif','Milieu Central','Ailier Gauche','Ailier Droit'],'Ailier Gauche':['Ailier Gauche','Milieu Offensif'],'Ailier Droit':['Ailier Droit','Milieu Offensif'],'Avant-Centre':['Avant-Centre','Ailier Gauche','Ailier Droit']};
+  const compat=COMPAT[pos?.role||'']||POSITIONS;
+  const rec=S.players.filter(p=>compat.includes(p.position));
+  const oth=S.players.filter(p=>!compat.includes(p.position));
+  const body=document.getElementById('assign-body');
+  if(!S.players.length){body.innerHTML=`<div class="empty" style="padding:24px"><p style="color:var(--txt3);font-size:13px">Aucun joueur.</p><button class="btn btn-p" style="margin-top:10px" onclick="closeAssign();nav('players')">${ic('plus')} Créer</button></div>`;document.getElementById('assign-ov').style.display='flex';return;}
+  const cur=S.tac.myAssign[posId];
+  const card=p=>{
+    const a=S.tac.myAssign[posId]===p.id;
+    const el=Object.values(S.tac.myAssign).includes(p.id)&&!a;
+    const ov=ovRating(p);
+    return `<div onclick="doAssign('${p.id}')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);border:1.5px solid ${a?'var(--acc)':'var(--bord)'};background:${a?'var(--acc-d)':'var(--bg2)'};cursor:pointer;margin-bottom:5px;transition:all .2s;opacity:${el?.5:1}">
+      ${portrait(p,34)}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;font-family:var(--fd)">${p.name}${p.number?` <span style="color:var(--txt3);font-size:10px">#${p.number}</span>`:''}</div>
+        <div style="font-size:10px;color:var(--txt3)">${p.position}${ov>0?` · <span style="color:${skColor(ov)}">${ov}/10</span>`:''}</div>
+        ${p.strengths?.length?`<div style="font-size:10px;color:var(--acc)">✦ ${p.strengths.slice(0,2).join(' · ')}</div>`:''}
+      </div>
+      ${a?`<span style="color:var(--acc)">${ic('check')}</span>`:''}${el?`<span style="font-size:9px;color:var(--txt3)">Placé</span>`:''}
+    </div>`;
+  };
+  body.innerHTML=(rec.length?`<div style="font-size:10px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Recommandés</div>${rec.map(card).join('')}`:'')
+    +(oth.length?`<div style="font-size:10px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">Autres</div>${oth.map(card).join('')}`:'')
+    +(cur?`<div style="margin-top:10px"><button class="btn btn-d btn-sm" onclick="doAssign(null)" style="width:100%;justify-content:center">${ic('x')} Retirer</button></div>`:'');
+  document.getElementById('assign-ov').style.display='flex';
+}
+function doAssign(pid){
+  if(pid)S.tac.myAssign[S._at?.posId]=pid;else delete S.tac.myAssign[S._at?.posId];
+  closeAssign();
+  if(S.page==='tactical')pgTactical();else if(S.page==='composition')pgComp();
+}
+function closeAssign(){document.getElementById('assign-ov').style.display='none';}
+
+// ═══ DASHBOARD ════════════════════════════════════════════════
+function pgDash(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div class="g4" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-ico" style="background:var(--acc-d)">${ic('user',18).replace('currentColor','var(--acc)')}</div><div><div class="stat-n">${S.players.length}</div><div class="stat-l">Joueurs</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--blue-d)">${ic('cal',18).replace('currentColor','var(--blue)')}</div><div><div class="stat-n">${S.sessions.length}</div><div class="stat-l">Séances</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--purple-d)">${ic('book',18).replace('currentColor','var(--purple)')}</div><div><div class="stat-n">${S.exercises.length}</div><div class="stat-l">Exercices</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--orange-d)">${ic('flag',18).replace('currentColor','var(--orange)')}</div><div><div class="stat-n">${S.opponents.length}</div><div class="stat-l">Adversaires</div></div></div>
+  </div>
+  <div class="g2" style="gap:14px">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="sec-title" style="margin:0">Assistant IA ${ic('zap',13)}</div>
+        <span class="tag t-g" style="font-size:10px">En ligne</span>
+      </div>
+      <div class="ai-panel" style="height:${window.innerWidth<768?300:360}px">
+        <div class="ai-msgs" id="ai-msgs" style="flex:1">
+          ${S._aiMsgs.length?S._aiMsgs.map(m=>`<div class="ai-msg ${m.r==='u'?'user':'ai'}"><div style="width:25px;height:25px;border-radius:50%;background:${m.r==='u'?'var(--surf2)':'var(--acc)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${m.r==='u'?ic('user',11):ic('zap',11)}</div><div class="ai-bub">${m.c}</div></div>`).join(''):
+          `<div class="ai-msg ai"><div style="width:25px;height:25px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center">${ic('zap',11)}</div><div class="ai-bub">Bonjour ! Je suis Coach Vision. Posez-moi vos questions de coaching : tactique, exercices, gestion de joueurs, analyse d'adversaires...</div></div>`}
+        </div>
+        <div class="ai-ir">
+          <input class="ai-in" id="ai-in" placeholder="Ex: Comment améliorer mon pressing ?" onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="btn btn-p btn-sm" onclick="sendAI()">${ic('send')}</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="sec-title">Accès rapide</div>
+        ${['Analyse tactique|tactical|target|var(--acc)','Avant-match IA|prematch|zap|#f5c842','Compo IA|composition|users|#4d9fff','Dashboard équipe|team-db|shield|#a78bfa','Situations de jeu|situation|clock|#f97316','Causerie|speech|mic|#ff4d6d'].map(x=>{const[l,p,i,col]=x.split('|');return `<div onclick="nav('${p}')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--rs);border:1px solid var(--bord);cursor:pointer;margin-bottom:5px;transition:all .2s" onmouseover="this.style.borderColor='${col}'" onmouseout="this.style.borderColor='var(--bord)'"><span style="color:${col}">${ic(i,13)}</span><span style="font-size:12px;font-weight:600;flex:1">${l}</span>${ic('chevron',12)}</div>`;}).join('')}
+      </div>
+      ${S.players.length?`<div class="card"><div class="sec-title">Top joueurs</div>${S.players.slice().sort((a,b)=>ovRating(b)-ovRating(a)).slice(0,3).map(p=>{const ov=ovRating(p);return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bord)">${portrait(p,30)}<div style="flex:1"><div style="font-size:12px;font-weight:700">${p.name}</div><div style="font-size:10px;color:var(--txt3)">${p.position}</div></div>${ov?`<div style="font-family:var(--fd);font-size:16px;font-weight:800;color:${skColor(ov)}">${ov}</div>`:''}</div>`;}).join('')}</div>`:''}
+    </div>
+  </div>`;
+  setTimeout(()=>{const m=document.getElementById('ai-msgs');if(m)m.scrollTop=m.scrollHeight;},50);
+}
+async function sendAI(){
+  const inp=document.getElementById('ai-in');
+  if(!inp||!inp.value.trim())return;
+  const msg=inp.value.trim();inp.value='';
+  S._aiMsgs.push({r:'u',c:msg});
+  addAI('user',msg);
+  const t=addAI('ai','<span class="spin">⏳</span>');
+  try{
+    const res=await callAI('Tu es Coach Vision, assistant de coaching football professionnel UEFA Pro. Réponds en français, de manière pédagogique et structurée.',msg);
+    const b=t.querySelector('.ai-bub');if(b)b.textContent=res;
+    S._aiMsgs.push({r:'a',c:res});
+  }catch(e){const b=t.querySelector('.ai-bub');if(b)b.textContent='Erreur de connexion.';}
+}
+function addAI(role,content){
+  const msgs=document.getElementById('ai-msgs');
+  if(!msgs)return{querySelector:()=>({textContent:''})};
+  const d=document.createElement('div');d.className='ai-msg '+(role==='user'?'user':'ai');
+  d.innerHTML=`<div style="width:25px;height:25px;border-radius:50%;background:${role==='user'?'var(--surf2)':'var(--acc)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${role==='user'?ic('user',11):ic('zap',11)}</div><div class="ai-bub">${content}</div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;
+}
+
+// ═══ TEAM DASHBOARD ════════════════════════════════════════════
+function pgTeamDB(){
+  const c=document.getElementById('content');
+  if(!S.players.length){c.innerHTML=`<div class="empty"><div class="empty-ico">${ic('shield',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucun joueur</div><div style="font-size:13px;color:var(--txt3)">Ajoutez des joueurs pour voir l'analyse collective.</div><button class="btn btn-p" style="margin-top:12px" onclick="nav('players')">${ic('plus')} Joueurs</button></div>`;return;}
+  const avg={};SKILLS.forEach(sk=>{const v=S.players.map(p=>p.skills?.[sk.key]||0).filter(v=>v>0);avg[sk.key]=v.length?Math.round(v.reduce((a,b)=>a+b)/v.length*10)/10:0;});
+  const top5=Object.entries(avg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const low5=Object.entries(avg).filter(([,v])=>v>0).sort((a,b)=>a[1]-b[1]).slice(0,5);
+  const themes={};S.sessions.forEach(s=>{if(s.objective)themes[s.objective]=(themes[s.objective]||0)+1;});
+  const topThemes=Object.entries(themes).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const posCount={};S.players.forEach(p=>{posCount[p.position]=(posCount[p.position]||0)+1;});
+  const ovs=S.players.map(ovRating).filter(v=>v>0);
+  const avgOv=ovs.length?Math.round(ovs.reduce((a,b)=>a+b)/ovs.length*10)/10:0;
+  c.innerHTML=`
+  <div class="g4" style="margin-bottom:16px">
+    <div class="stat"><div class="stat-ico" style="background:var(--acc-d)">${ic('users',18).replace('currentColor','var(--acc)')}</div><div><div class="stat-n">${S.players.length}</div><div class="stat-l">Joueurs</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--gold-d)">${ic('star',18).replace('currentColor','var(--gold)')}</div><div><div class="stat-n" style="color:${skColor(avgOv)}">${avgOv||'—'}</div><div class="stat-l">Moyenne équipe</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--blue-d)">${ic('cal',18).replace('currentColor','var(--blue)')}</div><div><div class="stat-n">${S.sessions.length}</div><div class="stat-l">Séances</div></div></div>
+    <div class="stat"><div class="stat-ico" style="background:var(--red-d)">${ic('clip',18).replace('currentColor','var(--red)')}</div><div><div class="stat-n">${S.reports.length}</div><div class="stat-l">Rapports</div></div></div>
+  </div>
+  <div class="g2" style="gap:14px">
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="sec-title" style="color:var(--acc)">✦ Forces collectives</div>
+        ${top5.length?top5.map(([k,v])=>{const sk=SKILLS.find(s=>s.key===k);return rBar(sk?.label||k,v,sk?.color);}).join(''):'<p style="font-size:12px;color:var(--txt3)">Notez vos joueurs pour voir l\'analyse.</p>'}
+      </div>
+      <div class="card">
+        <div class="sec-title" style="color:var(--red)">⚠ Axes de progression collectifs</div>
+        ${low5.length?low5.map(([k,v])=>{const sk=SKILLS.find(s=>s.key===k);return rBar(sk?.label||k,v,'#ff4d6d');}).join(''):'<p style="font-size:12px;color:var(--txt3)">Aucune donnée.</p>'}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div class="sec-title">Thèmes d\'entraînement travaillés</div>
+        ${topThemes.length?topThemes.map(([th,n])=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--txt2)">${th}</span><div style="display:flex;align-items:center;gap:7px;flex:1;margin-left:10px"><div class="rating-bar" style="flex:1"><div class="rating-fill" style="width:${Math.min(100,n*20)}%;background:var(--acc)"></div></div><span style="font-size:11px;font-weight:700;color:var(--txt3)">${n}x</span></div></div>`).join(''):'<p style="font-size:12px;color:var(--txt3)">Créez des séances pour voir les thèmes.</p>'}
+      </div>
+      <div class="card">
+        <div class="sec-title">Répartition des postes</div>
+        ${Object.entries(posCount).map(([pos,n])=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="width:7px;height:7px;border-radius:50%;background:${pCol(pos)};flex-shrink:0"></span><span style="font-size:12px;flex:1;color:var(--txt2)">${pos}</span><span class="tag t-gr" style="font-size:9px">${n}</span></div>`).join('')||'<p style="font-size:12px;color:var(--txt3)">Aucun joueur.</p>'}
+      </div>
+      ${S.reports.length?`<div class="card card-acc"><div class="sec-title">${ic('zap',13)} Suggestions d\'entraînement IA</div><button class="btn btn-p btn-sm" id="sug-btn" onclick="genSuggestions()">${ic('zap')} Analyser les rapports</button><div id="sug-res" style="margin-top:10px"></div></div>`:''}
+    </div>
+  </div>`;
+}
+async function genSuggestions(){
+  const btn=document.getElementById('sug-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span> Analyse...`;}
+  const txt=S.reports.slice(-5).map(r=>`Match vs ${r.opponent}: ${r.report||r.analysis||''}`).join('\n');
+  try{const res=await callAI('Tu es un entraîneur football professionnel. Réponds en français.',`Analyse ces rapports et propose 3-4 thèmes d'entraînement prioritaires avec des exercices concrets:\n\n${txt}`);
+  const el=document.getElementById('sug-res');if(el)el.innerHTML=`<p style="font-size:12px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;margin-top:6px">${res}</p>`;}catch(e){}
+  if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Ré-analyser';}
+}
+
+// ═══ PLAYERS ══════════════════════════════════════════════════
+function pgPlayers(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="flex:1;position:relative;min-width:140px"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--txt3)">${ic('search',13)}</span><input class="fi" style="padding-left:30px" id="p-s" placeholder="Rechercher..." oninput="renderPGrid()"></div>
+    <select class="fs" style="width:auto;min-width:120px" id="p-pf" onchange="renderPGrid()"><option value="">Tous les postes</option>${POSITIONS.map(p=>`<option>${p}</option>`).join('')}</select>
+    <button class="btn btn-p" onclick="openPForm()">${ic('plus')} Nouveau joueur</button>
+  </div>
+  <div id="p-grid"></div>`;
+  renderPGrid();
+}
+function renderPGrid(){
+  const q=(document.getElementById('p-s')?.value||'').toLowerCase();
+  const pf=document.getElementById('p-pf')?.value||'';
+  const filtered=S.players.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(!pf||p.position===pf));
+  const grid=document.getElementById('p-grid');if(!grid)return;
+  if(!filtered.length){grid.innerHTML=`<div class="empty"><div class="empty-ico">${ic('user',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">${S.players.length?'Aucun résultat':'Aucun joueur'}</div>${!S.players.length?`<button class="btn btn-p" style="margin-top:12px" onclick="openPForm()">${ic('plus')} Créer</button>`:''}</div>`;return;}
+  grid.className='g3';
+  grid.innerHTML=filtered.map(p=>{
+    const ov=ovRating(p);const col=pCol(p.position);
+    const tops=SKILLS.filter(sk=>(p.skills?.[sk.key]||0)>=7).slice(0,3);
+    const lows=SKILLS.filter(sk=>{const v=p.skills?.[sk.key]||0;return v>0&&v<=4;}).slice(0,2);
+    return `<div class="card card-h" onclick="viewPlayer('${p.id}')">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+        ${portrait(p,42)}
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--fd);font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}${p.number?` <span style="color:var(--txt3);font-size:10px">#${p.number}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--txt3)">${p.position}</div>
+        </div>
+        ${ov>0?`<div style="font-family:var(--fd);font-size:19px;font-weight:800;color:${skColor(ov)}">${ov}</div>`:''}
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:7px">
+        <span class="tag t-gr" style="font-size:9px">Pied ${p.foot||'D'}</span>
+        ${p.age?`<span class="tag t-gr" style="font-size:9px">${p.age}ans</span>`:''}
+        ${p.nationality?`<span class="tag t-gr" style="font-size:9px">${p.nationality}</span>`:''}
+      </div>
+      ${tops.length?`<div style="display:flex;gap:3px;flex-wrap:wrap">${tops.map(sk=>`<span class="tag t-g" style="font-size:9px">${sk.label}</span>`).join('')}</div>`:''}
+      ${lows.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${lows.map(sk=>`<span class="tag t-r" style="font-size:9px">${sk.label}</span>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function viewPlayer(id){
+  const p=S.players.find(x=>x.id===id);if(!p)return;
+  const ov=ovRating(p);
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
+    <button class="btn-ico" onclick="nav('players')">${ic('back')}</button>
+    <div style="flex:1"><div style="font-family:var(--fd);font-size:18px;font-weight:800">${p.name}${p.number?` <span style="color:var(--txt3);font-size:13px">#${p.number}</span>`:''}</div><div style="font-size:11px;color:var(--txt3)">${p.position}${p.age?' · '+p.age+' ans':''}${p.nationality?' · '+p.nationality:''}</div></div>
+    <button class="btn btn-s btn-sm" onclick="openPForm('${id}')">${ic('edit')} Modifier</button>
+    <button class="btn-ico btn-sm" style="color:var(--red)" onclick="delPlayer('${id}')">${ic('trash')}</button>
+  </div>
+  <div class="g2" style="gap:14px">
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:13px;margin-bottom:13px">
+          ${portrait(p,60)}
+          <div>
+            <div style="font-family:var(--fd);font-size:17px;font-weight:800">${p.name}</div>
+            <div style="font-size:12px;color:var(--txt3)">${p.position}</div>
+            <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+              ${p.foot?`<span class="tag t-gr" style="font-size:9px">Pied ${p.foot}</span>`:''}
+              ${p.age?`<span class="tag t-gr" style="font-size:9px">${p.age}ans</span>`:''}
+              ${p.height?`<span class="tag t-gr" style="font-size:9px">${p.height}cm</span>`:''}
+              ${p.weight?`<span class="tag t-gr" style="font-size:9px">${p.weight}kg</span>`:''}
+              ${p.nationality?`<span class="tag t-gr" style="font-size:9px">${p.nationality}</span>`:''}
+            </div>
+          </div>
+          ${ov>0?`<div style="margin-left:auto;text-align:center"><div style="font-family:var(--fd);font-size:30px;font-weight:800;color:${skColor(ov)};line-height:1">${ov}</div><div style="font-size:9px;color:var(--txt3)">Note globale</div></div>`:''}
+        </div>
+        ${p.bio?`<p style="font-size:12px;color:var(--txt2);line-height:1.5;border-top:1px solid var(--bord);padding-top:10px">${p.bio}</p>`:''}
+      </div>
+      <div class="card">
+        <div class="sec-title">Attributs Techniques & Physiques</div>
+        ${SKILLS.slice(0,10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],sk.color):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Aucun attribut renseigné.</p>'}
+      </div>
+      <div class="card">
+        <div class="sec-title">Mental & Caractère</div>
+        ${SKILLS.slice(10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],'#e879f9'):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Non renseigné.</p>'}
+        ${p.character_notes?`<p style="font-size:12px;color:var(--txt2);line-height:1.5;margin-top:9px;border-top:1px solid var(--bord);padding-top:9px">${p.character_notes}</p>`:''}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      ${(p.strengths?.length||p.weaknesses?.length)?`<div class="card">
+        ${p.strengths?.length?`<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:6px">Points forts</div><div style="display:flex;gap:4px;flex-wrap:wrap">${p.strengths.map(s=>`<span class="tag t-g">${s}</span>`).join('')}</div></div>`:''}
+        ${p.weaknesses?.length?`<div><div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:6px">Axes de progression</div><div style="display:flex;gap:4px;flex-wrap:wrap">${p.weaknesses.map(w=>`<span class="tag t-r">${w}</span>`).join('')}</div></div>`:''}
+      </div>`:''}
+      ${(p.matches!==undefined||p.goals!==undefined)?`<div class="card">
+        <div class="sec-title">Statistiques saison</div>
+        <div class="g3" style="gap:7px">
+          ${p.matches!==undefined?`<div style="text-align:center;padding:9px;background:var(--bg2);border-radius:var(--rs)"><div style="font-family:var(--fd);font-size:20px;font-weight:800">${p.matches}</div><div style="font-size:10px;color:var(--txt3)">Matchs</div></div>`:''}
+          ${p.goals!==undefined?`<div style="text-align:center;padding:9px;background:var(--bg2);border-radius:var(--rs)"><div style="font-family:var(--fd);font-size:20px;font-weight:800;color:var(--acc)">${p.goals}</div><div style="font-size:10px;color:var(--txt3)">Buts</div></div>`:''}
+          ${p.assists!==undefined?`<div style="text-align:center;padding:9px;background:var(--bg2);border-radius:var(--rs)"><div style="font-family:var(--fd);font-size:20px;font-weight:800;color:var(--blue)">${p.assists}</div><div style="font-size:10px;color:var(--txt3)">PD</div></div>`:''}
+          ${p.yellow!==undefined?`<div style="text-align:center;padding:9px;background:var(--bg2);border-radius:var(--rs)"><div style="font-family:var(--fd);font-size:20px;font-weight:800;color:var(--gold)">${p.yellow}</div><div style="font-size:10px;color:var(--txt3)">CJ</div></div>`:''}
+          ${p.red!==undefined?`<div style="text-align:center;padding:9px;background:var(--bg2);border-radius:var(--rs)"><div style="font-family:var(--fd);font-size:20px;font-weight:800;color:var(--red)">${p.red}</div><div style="font-size:10px;color:var(--txt3)">CR</div></div>`:''}
+        </div>
+      </div>`:''}
+      <div class="card card-acc">
+        <div class="sec-title">${ic('zap',13)} Analyse & Poste Idéal IA</div>
+        <button class="btn btn-p btn-sm" onclick="analyzePlayer('${id}')" id="pa-btn">${ic('zap')} Analyser le profil</button>
+        <div id="pa-res" style="margin-top:10px"></div>
+      </div>
+      ${p.coach_notes?`<div class="card"><div class="sec-title">Notes coach</div><p style="font-size:12px;color:var(--txt2);line-height:1.5">${p.coach_notes}</p></div>`:''}
+    </div>
+  </div>`;
+}
+async function analyzePlayer(id){
+  const p=S.players.find(x=>x.id===id);if(!p)return;
+  const btn=document.getElementById('pa-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+  const skTxt=SKILLS.filter(sk=>p.skills?.[sk.key]).map(sk=>`${sk.label}:${p.skills[sk.key]}/10`).join(', ');
+  try{
+    const res=await callAI('Tu es un recruteur et analyste football professionnel. Réponds en français.',
+      `Analyse ce profil joueur.\nNom:${p.name} | Poste:${p.position} | Pied:${p.foot||'D'} | Âge:${p.age||'?'}\nAttributs: ${skTxt||'Non renseignés'}\nPoints forts: ${p.strengths?.join(', ')||'N/A'}\nAxes progression: ${p.weaknesses?.join(', ')||'N/A'}\n\nFournis:\n1. PROFIL (2 phrases)\n2. POSTE IDÉAL et postes alternatifs possibles avec justification\n3. POINTS FORTS à développer\n4. AXES PRIORITAIRES à travailler\n5. EXERCICES RECOMMANDÉS (2-3 exercices spécifiques)\n6. POTENTIEL sur 12 mois`);
+    const el=document.getElementById('pa-res');if(el)el.innerHTML=`<p style="font-size:12px;color:var(--txt2);line-height:1.6;white-space:pre-wrap">${res}</p>`;
+  }catch(e){const el=document.getElementById('pa-res');if(el)el.textContent='Erreur de connexion.';}
+  if(btn){btn.disabled=false;btn.innerHTML=ic('refresh',12)+' Ré-analyser';}
+}
+function openPForm(editId=null){
+  const p=editId?S.players.find(x=>x.id===editId):null;
+  const gv=(k,def='')=>p?(p[k]??def):def;
+  const gsk=k=>p?.skills?.[k]||5;
+  openMod(`
+  <div class="mh"><span class="mt">${p?'Modifier':'Nouveau joueur'}</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div>
+  <div class="mb">
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Identité</div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Nom *</label><input class="fi" id="pf-n" value="${gv('name')}" placeholder="Pierre Martin"></div>
+        <div class="fg"><label class="fl">Numéro</label><input class="fi" type="number" id="pf-num" value="${gv('number')}" placeholder="10"></div>
+        <div class="fg"><label class="fl">Poste *</label><select class="fs" id="pf-pos">${POSITIONS.map(pos=>`<option${gv('position')===pos?' selected':''}>${pos}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Pied</label><select class="fs" id="pf-foot"><option${gv('foot')==='Droit'?' selected':''}>Droit</option><option${gv('foot')==='Gauche'?' selected':''}>Gauche</option><option${gv('foot')==='Les deux'?' selected':''}>Les deux</option></select></div>
+        <div class="fg"><label class="fl">Âge</label><input class="fi" type="number" id="pf-age" value="${gv('age')}" placeholder="17"></div>
+        <div class="fg"><label class="fl">Taille (cm)</label><input class="fi" type="number" id="pf-h" value="${gv('height')}" placeholder="178"></div>
+        <div class="fg"><label class="fl">Poids (kg)</label><input class="fi" type="number" id="pf-w" value="${gv('weight')}" placeholder="72"></div>
+        <div class="fg"><label class="fl">Nationalité</label><input class="fi" id="pf-nat" value="${gv('nationality')}" placeholder="Française"></div>
+      </div>
+      <div class="fg"><label class="fl">Bio / Historique</label><textarea class="fta" id="pf-bio" placeholder="Clubs précédents, formation...">${gv('bio')}</textarea></div>
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Attributs — noter sur 10</div>
+      ${SKILLS.map(sk=>`<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><label style="font-size:12px;color:var(--txt2)">${sk.label}</label><span style="font-size:13px;font-weight:800;color:${sk.color};font-family:var(--fd)" id="sv-${sk.key}">${gsk(sk.key)}</span></div><input type="range" min="1" max="10" value="${gsk(sk.key)}" id="sk-${sk.key}" oninput="document.getElementById('sv-${sk.key}').textContent=this.value" style="accent-color:${sk.color}"></div>`).join('')}
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Forces & axes</div>
+      <div class="fg"><label class="fl">Points forts (virgules)</label><input class="fi" id="pf-str" value="${gv('strengths')?.join?.(', ')||gv('strengths')||''}" placeholder="Vitesse, Frappe, Leadership"></div>
+      <div class="fg"><label class="fl">Axes progression (virgules)</label><input class="fi" id="pf-wk" value="${gv('weaknesses')?.join?.(', ')||gv('weaknesses')||''}" placeholder="Duel aérien, Finition"></div>
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Statistiques saison</div>
+      <div class="g4" style="gap:7px">
+        <div class="fg"><label class="fl">Matchs</label><input class="fi" type="number" id="pf-m" value="${gv('matches')}" placeholder="0"></div>
+        <div class="fg"><label class="fl">Buts</label><input class="fi" type="number" id="pf-g" value="${gv('goals')}" placeholder="0"></div>
+        <div class="fg"><label class="fl">Passes D.</label><input class="fi" type="number" id="pf-a" value="${gv('assists')}" placeholder="0"></div>
+        <div class="fg"><label class="fl">C. Jaunes</label><input class="fi" type="number" id="pf-y" value="${gv('yellow')}" placeholder="0"></div>
+      </div>
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Notes coach</div>
+      <div class="fg"><label class="fl">Observations générales</label><textarea class="fta" id="pf-cn" placeholder="Blessures, comportement, progression...">${gv('coach_notes')}</textarea></div>
+      <div class="fg"><label class="fl">Mental & caractère</label><textarea class="fta" id="pf-chr" placeholder="Leadership, réaction pression, attitude entraînement...">${gv('character_notes')}</textarea></div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn btn-s" onclick="closeMod()">Annuler</button>
+    <button class="btn btn-p" onclick="savePlayer('${editId||''}')">${ic('check')} ${p?'Sauvegarder':'Créer'}</button>
+  </div>`,'modal-lg');
+}
+function savePlayer(editId){
+  const name=document.getElementById('pf-n')?.value?.trim();if(!name)return;
+  const skills={};SKILLS.forEach(sk=>{const v=document.getElementById('sk-'+sk.key);if(v)skills[sk.key]=parseInt(v.value);});
+  const gv=(id,t='s')=>{const el=document.getElementById(id);if(!el)return undefined;const v=el.value.trim();if(!v)return undefined;return t==='n'?parseInt(v):v;};
+  const pl={id:editId||String(Date.now()),name,number:gv('pf-num'),position:document.getElementById('pf-pos')?.value,foot:document.getElementById('pf-foot')?.value,age:gv('pf-age','n'),height:gv('pf-h','n'),weight:gv('pf-w','n'),nationality:gv('pf-nat'),bio:gv('pf-bio'),skills,strengths:document.getElementById('pf-str')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[],weaknesses:document.getElementById('pf-wk')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[],matches:gv('pf-m','n'),goals:gv('pf-g','n'),assists:gv('pf-a','n'),yellow:gv('pf-y','n'),coach_notes:gv('pf-cn'),character_notes:gv('pf-chr')};
+  if(editId)S.players=S.players.map(p=>p.id===editId?pl:p);else S.players.push(pl);
+  save();closeMod();pgPlayers();
+}
+function delPlayer(id){if(!confirm('Supprimer ce joueur ?'))return;S.players=S.players.filter(p=>p.id!==id);Object.keys(S.tac.myAssign).forEach(k=>{if(S.tac.myAssign[k]===id)delete S.tac.myAssign[k];});save();nav('players');}
+
+// ═══ COMPOSITION ════════════════════════════════════════════════
+function pgComp(){
+  const c=document.getElementById('content');
+  if(!S.players.length){c.innerHTML=`<div class="empty"><div class="empty-ico">${ic('users',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucun joueur</div><button class="btn btn-p" style="margin-top:12px" onclick="nav('players')">${ic('plus')} Créer</button></div>`;return;}
+  if(!S._compAvail)S._compAvail=S.players.map(p=>p.id);
+  c.innerHTML=`
+  <div class="g2" style="gap:14px">
+    <div class="card">
+      <div class="sec-title">Joueurs disponibles</div>
+      <div style="max-height:240px;overflow-y:auto;margin-bottom:10px">
+        ${S.players.map(p=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bord);cursor:pointer">
+          <input type="checkbox" ${(S._compAvail||[]).includes(p.id)?'checked':''} onchange="toggleCA('${p.id}',this.checked)" style="accent-color:var(--acc);width:13px;height:13px">
+          ${portrait(p,26)}<div style="flex:1"><div style="font-size:12px;font-weight:600">${p.name}</div><div style="font-size:10px;color:var(--txt3)">${p.position}</div></div>
+          <span style="font-size:11px;font-weight:700;color:${skColor(ovRating(p))}">${ovRating(p)||''}</span>
+        </label>`).join('')}
+      </div>
+      <div class="fg"><label class="fl">Système souhaité</label>
+        <select class="fs" id="comp-f"><option value="">Laisse l'IA choisir</option>${Object.keys(FORM).map(f=>`<option>${f}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label class="fl">Contexte</label><input class="fi" id="comp-ctx" placeholder="Ex: match décisif, terrain synthétique..."></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center" onclick="genComp()" id="comp-btn">${ic('zap')} Proposer la composition</button>
+    </div>
+    <div id="comp-res"><div class="card" style="text-align:center;padding:28px;color:var(--txt3);font-size:13px">Sélectionnez vos joueurs disponibles puis cliquez sur Composer.</div></div>
+  </div>`;
+}
+function toggleCA(id,checked){
+  if(!S._compAvail)S._compAvail=S.players.map(p=>p.id);
+  if(checked)S._compAvail=[...new Set([...S._compAvail,id])];
+  else S._compAvail=S._compAvail.filter(x=>x!==id);
+}
+async function genComp(){
+  const btn=document.getElementById('comp-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span> Analyse...`;}
+  const avail=(S._compAvail||[]);const players=S.players.filter(p=>avail.includes(p.id));
+  if(players.length<7){alert('Sélectionnez au moins 7 joueurs.');if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Composer';}return;}
+  const fChoice=document.getElementById('comp-f')?.value;
+  const ctx=document.getElementById('comp-ctx')?.value||'';
+  const pList=players.map(p=>`- ${p.name} | ${p.position} | Pied:${p.foot||'D'} | Note:${ovRating(p)||'?'}/10 | Forces:${p.strengths?.slice(0,2).join(',')||'N/A'}`).join('\n');
+  try{
+    const res=await callAI('Tu es un entraîneur UEFA Pro. Propose une composition optimale en français.',
+      `Compose la meilleure équipe avec ces joueurs.\n${fChoice?`Système demandé: ${fChoice}`:'Choisis le meilleur système.'}\n${ctx?`Contexte: ${ctx}`:''}\n\nJOUEURS:\n${pList}\n\nFournis:\nSYSTÈME: [ex: 4-3-3]\nRAISON SYSTÈME: [2 phrases]\n\nTITULAIRES:\nGardien: [Nom] – [justification]\nDéfense: [Noms + postes] – [justification]\nMilieu: [Noms + postes] – [justification]\nAttaque: [Noms + postes] – [justification]\n\nREMPLAÇANTS: [Noms + rôles]\n\nFORCES DE CETTE COMPO: [3 points]\nRISQUES: [2 compensations]\nCONSIGNES COLLECTIVES: [3 directives]`);
+    const el=document.getElementById('comp-res');
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:7px;margin-bottom:11px"><span class="tag t-g">${ic('zap',11)} Composition IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">${res}</div></div>`;
+  }catch(e){const el=document.getElementById('comp-res');if(el)el.innerHTML=`<div class="card"><p style="color:var(--red);font-size:13px">Erreur. Réessayez.</p></div>`;}
+  if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Recomposer';}
+}
+
+// ═══ SESSIONS ════════════════════════════════════════════════════
+function pgSessions(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-p" onclick="openSessMod()">${ic('plus')} Nouvelle séance</button></div>
+  ${!S.sessions.length?`<div class="empty"><div class="empty-ico">${ic('cal',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucune séance</div><button class="btn btn-p" style="margin-top:12px" onclick="openSessMod()">${ic('plus')} Créer</button></div>`:
+  `<div class="g2">${S.sessions.map(s=>{const oC={'Possession':'#00e5a0','Pressing':'#ff4d6d','Finition':'#f97316','Transition':'#a78bfa','Conservation':'#4d9fff'};const col=oC[s.objective]||'#00e5a0';return `<div class="card card-h" onclick="viewSess('${s.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px">
+      <div style="width:34px;height:34px;border-radius:8px;background:${col}22;display:flex;align-items:center;justify-content:center">${ic('cal',14).replace('currentColor',col)}</div>
+      <div style="display:flex;gap:3px">${s.generated?`<span class="tag t-g" style="font-size:9px">${ic('zap',9)} IA</span>`:''}<button class="btn-ico" style="padding:2px;color:var(--red)" onclick="event.stopPropagation();delSess('${s.id}')">${ic('trash',11)}</button></div>
+    </div>
+    <div style="font-family:var(--fd);font-size:13px;font-weight:800;margin-bottom:3px">${s.name}</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:7px">${s.date}</div>
+    <div style="display:flex;gap:3px;flex-wrap:wrap"><span class="tag t-gr" style="font-size:9px">${s.duration}min</span><span class="tag t-gr" style="font-size:9px">${s.players}j</span><span class="tag" style="font-size:9px;background:${col}22;color:${col}">${s.objective}</span></div>
+  </div>`;}).join('')}</div>`}`;
+}
+function openSessMod(){
+  openMod(`<div class="mh"><span class="mt">${ic('zap',14)} Séance IA</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div>
+  <div class="mb">
+    <div style="background:var(--acc-d);border:1px solid rgba(0,229,160,.18);border-radius:var(--rs);padding:9px 12px;margin-bottom:12px;font-size:12px;color:var(--txt2)">L'IA génère une séance professionnelle complète adaptée à vos paramètres.</div>
+    <div class="g2">
+      <div class="fg"><label class="fl">Catégorie</label><select class="fs" id="sf-cat">${CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Niveau</label><select class="fs" id="sf-lvl">${LEVELS.map(l=>`<option>${l}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Joueurs</label><input class="fi" type="number" id="sf-pl" value="15" min="6" max="25"></div>
+      <div class="fg"><label class="fl">Durée (min)</label><input class="fi" type="number" id="sf-dur" value="90" min="45" max="120" step="15"></div>
+    </div>
+    <div class="fg"><label class="fl">Objectif</label><select class="fs" id="sf-obj">${OBJECTIVES.map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="fg"><label class="fl">Contexte</label><input class="fi" id="sf-ctx" placeholder="Ex: avant match important, récupération..."></div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" id="gen-btn" onclick="generateSess()">${ic('zap')} Générer</button></div>`,'modal-lg');
+}
+async function generateSess(){
+  const btn=document.getElementById('gen-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+  const cat=document.getElementById('sf-cat').value,lvl=document.getElementById('sf-lvl').value,pl=document.getElementById('sf-pl').value,dur=document.getElementById('sf-dur').value,obj=document.getElementById('sf-obj').value,ctx=document.getElementById('sf-ctx')?.value;
+  try{
+    const res=await callAI('Tu es un entraîneur UEFA Pro. Réponds en français.',
+      `Génère une séance d'entraînement football.\nCatégorie:${cat}|Niveau:${lvl}|Joueurs:${pl}|Durée:${dur}min|Objectif:${obj}${ctx?'|Contexte:'+ctx:''}\n\nFormat STRICT:\nTITRE: [titre]\n\nÉCHAUFFEMENT (15 min):\nNom: []\nDescription: []\nObjectif: []\n\nATELIER 1 (20 min):\nNom: []\nDescription: []\nObjectif: []\nGardien: oui/non\n\nATELIER 2 (20 min):\nNom: []\nDescription: []\nObjectif: []\nGardien: oui/non\n\nATELIER BONUS (15 min):\nNom: []\nDescription: []\nObjectif: []\n\nJEU RÉDUIT (${parseInt(dur)-70} min):\nNom: []\nDescription: []\nFormat: []\n\nCONSEILS: [3 conseils coach]`);
+    const lines=res.split('\n'),get=p=>lines.find(l=>l.startsWith(p))?.replace(p,'').trim()||'';
+    const phases=['ÉCHAUFFEMENT','ATELIER 1','ATELIER 2','ATELIER BONUS','JEU RÉDUIT'];
+    const pC={'ÉCHAUFFEMENT':'#f5c842','ATELIER 1':'#00e5a0','ATELIER 2':'#00e5a0','ATELIER BONUS':'#4d9fff','JEU RÉDUIT':'#ff4d6d'};
+    const pD={'ÉCHAUFFEMENT':15,'ATELIER 1':20,'ATELIER 2':20,'ATELIER BONUS':15,'JEU RÉDUIT':Math.max(15,parseInt(dur)-70)};
+    const exs=[];let cur=null;
+    for(const line of lines){const ph=phases.find(p=>line.startsWith(p));if(ph){if(cur)exs.push(cur);const dm=line.match(/\((\d+)/);cur={id:Date.now()+Math.random(),phase:ph,color:pC[ph],duration:dm?parseInt(dm[1]):pD[ph],name:'',description:'',objective:'',goalkeeper:false};}else if(cur){if(line.startsWith('Nom:'))cur.name=line.slice(4).trim();if(line.startsWith('Description:'))cur.description=line.slice(12).trim();if(line.startsWith('Objectif:'))cur.objective=line.slice(9).trim();if(line.startsWith('Gardien:'))cur.goalkeeper=line.toLowerCase().includes('oui');}}
+    if(cur)exs.push(cur);
+    const s={id:String(Date.now()),name:get('TITRE:')||`Séance ${obj}`,date:new Date().toISOString().split('T')[0],category:cat,level:lvl,duration:parseInt(dur),objective:obj,players:parseInt(pl),exercises:exs.filter(e=>e.name),coachNotes:get('CONSEILS:'),generated:true};
+    S.sessions.push(s);save();closeMod();viewSess(s.id);
+  }catch(e){if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Réessayer';}}
+}
+function viewSess(id){
+  const s=S.sessions.find(x=>x.id===id);if(!s)return;
+  const pC={'ÉCHAUFFEMENT':'#f5c842','ATELIER 1':'#00e5a0','ATELIER 2':'#00e5a0','ATELIER BONUS':'#4d9fff','JEU RÉDUIT':'#ff4d6d'};
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
+    <button class="btn-ico" onclick="nav('sessions')">${ic('back')}</button>
+    <div style="flex:1"><div style="font-family:var(--fd);font-size:17px;font-weight:800">${s.name}</div><div style="font-size:11px;color:var(--txt3)">${s.date} · ${s.duration}min · ${s.players}j</div></div>
+    ${s.generated?`<span class="tag t-g" style="font-size:9px">${ic('zap',9)} IA</span>`:''}
+  </div>
+  <div class="g2" style="gap:14px">
+    <div>
+      <div class="sec-title">Déroulé</div>
+      ${(s.exercises||[]).map(ex=>`<div style="background:var(--bg2);border:1px solid var(--bord);border-radius:var(--r);padding:11px;margin-bottom:7px"><div style="display:flex;justify-content:space-between"><span style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:${pC[ex.phase]||'var(--acc)'}">${ex.phase}</span><span style="font-size:11px;color:var(--txt3)">${ex.duration}min</span></div><div style="font-family:var(--fd);font-size:13px;font-weight:700;margin-top:3px">${ex.name}</div><div style="font-size:11px;color:var(--txt3);margin-top:3px">${ex.description}</div>${ex.objective?`<div style="display:flex;gap:4px;margin-top:5px"><span class="tag t-gr" style="font-size:9px">${ex.objective}</span>${ex.goalkeeper?`<span class="tag t-g" style="font-size:9px">GK</span>`:''}</div>`:''}</div>`).join('')}
+    </div>
+    <div>
+      ${s.coachNotes?`<div class="card card-acc" style="margin-bottom:13px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">${ic('zap',12)} Conseils coach</div><p style="font-size:12px;color:var(--txt2);line-height:1.6">${s.coachNotes}</p></div>`:''}
+      <div class="card"><div class="sec-title">Répartition</div>${(s.exercises||[]).map(ex=>`<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--txt2)">${ex.phase}</span><span style="color:var(--txt3)">${ex.duration}min</span></div><div class="pb"><div class="pbf" style="width:${(ex.duration/s.duration*100).toFixed(0)}%;background:${pC[ex.phase]||'var(--acc)'}"></div></div></div>`).join('')}</div>
+    </div>
+  </div>`;
+}
+function delSess(id){if(!confirm('Supprimer ?'))return;S.sessions=S.sessions.filter(s=>s.id!==id);save();pgSessions();}
+
+// ═══ LIBRARY ════════════════════════════════════════════════════
+function pgLib(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="flex:1;position:relative;min-width:130px"><span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--txt3)">${ic('search',12)}</span><input class="fi" style="padding-left:28px" id="lib-s" placeholder="Rechercher..." oninput="renderLib()"></div>
+    <button class="btn btn-s btn-sm" onclick="openGenEx()">${ic('zap',12)} IA</button>
+    <button class="btn btn-p btn-sm" onclick="openAddEx()">${ic('plus',12)} Ajouter</button>
+  </div>
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="lib-fs">
+    ${['Tous',...OBJECTIVES].map(o=>`<button onclick="setLF('${o}')" data-o="${o}" style="padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bord);background:var(--surf);color:var(--txt2);transition:all .2s">${o}</button>`).join('')}
+  </div>
+  <div class="g3" id="lib-grid"></div>`;
+  setLF(S._libFilter||'Tous');
+}
+function setLF(obj){
+  S._libFilter=obj;
+  document.querySelectorAll('[data-o]').forEach(b=>{const a=b.dataset.o===obj;b.style.background=a?'var(--acc-d)':'var(--surf)';b.style.color=a?'var(--acc)':'var(--txt2)';b.style.borderColor=a?'rgba(0,229,160,.3)':'var(--bord)';});
+  renderLib();
+}
+function renderLib(){
+  const q=(document.getElementById('lib-s')?.value||'').toLowerCase(),obj=S._libFilter||'Tous';
+  const oC={'Possession':'#00e5a0','Pressing':'#ff4d6d','Finition':'#f97316','Transition':'#a78bfa','Conservation':'#4d9fff','Duels':'#f5c842','Défense':'#4d9fff'};
+  const filtered=S.exercises.filter(e=>(!q||e.name.toLowerCase().includes(q)||e.description?.toLowerCase().includes(q))&&(obj==='Tous'||e.objective===obj));
+  const grid=document.getElementById('lib-grid');if(!grid)return;
+  grid.innerHTML=!filtered.length?`<div class="empty" style="grid-column:1/-1">${ic('book',26)}<div style="font-family:var(--fd);font-size:16px;font-weight:700;margin-top:8px">Aucun exercice</div></div>`:
+  filtered.map(ex=>{const col=oC[ex.objective]||'#00e5a0';return `<div class="card" style="display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;justify-content:space-between"><span class="tag" style="background:${col}22;color:${col};font-size:9px">${ex.objective}</span><div style="display:flex;gap:2px">${ex.generated?`<span class="tag t-g" style="font-size:8px">IA</span>`:''}<button class="btn-ico" style="padding:2px;color:var(--red)" onclick="delEx(${ex.id})">${ic('trash',11)}</button></div></div>
+    <div style="font-family:var(--fd);font-size:13px;font-weight:800">${ex.name}</div>
+    <div style="font-size:11px;color:var(--txt3);line-height:1.5;flex:1">${ex.description||''}</div>
+    ${ex.advice?`<div style="font-size:10px;color:var(--acc);font-style:italic">💡 ${ex.advice}</div>`:''}
+    <div style="display:flex;gap:3px;flex-wrap:wrap;border-top:1px solid var(--bord);padding-top:6px"><span class="tag t-gr" style="font-size:9px">${ex.players}j</span><span class="tag t-gr" style="font-size:9px">${ex.duration}min</span>${ex.goalkeeper?`<span class="tag t-g" style="font-size:9px">GK</span>`:''}</div>
+  </div>`;}).join('');
+}
+function openAddEx(){openMod(`<div class="mh"><span class="mt">Nouvel exercice</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div><div class="mb"><div class="fg"><label class="fl">Nom *</label><input class="fi" id="ef-n" placeholder="Ex: Rondo 5v2"></div><div class="g2"><div class="fg"><label class="fl">Objectif</label><select class="fs" id="ef-o">${OBJECTIVES.map(o=>`<option>${o}</option>`).join('')}</select></div><div class="fg"><label class="fl">Durée (min)</label><input class="fi" type="number" id="ef-d" value="15"></div></div><div class="g2"><div class="fg"><label class="fl">Joueurs</label><input class="fi" type="number" id="ef-p" value="10"></div><div class="fg"><label class="fl">Gardien</label><select class="fs" id="ef-g"><option value="non">Non</option><option value="oui">Oui</option></select></div></div><div class="fg"><label class="fl">Description</label><textarea class="fta" id="ef-desc"></textarea></div></div><div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" onclick="saveEx()">${ic('plus')} Ajouter</button></div>`);}
+function saveEx(){const n=document.getElementById('ef-n')?.value?.trim();if(!n)return;S.exercises.push({id:Date.now(),name:n,objective:document.getElementById('ef-o').value,duration:parseInt(document.getElementById('ef-d').value),players:parseInt(document.getElementById('ef-p').value),goalkeeper:document.getElementById('ef-g').value==='oui',description:document.getElementById('ef-desc').value.trim()});save();closeMod();pgLib();}
+function openGenEx(){openMod(`<div class="mh"><span class="mt">${ic('zap',14)} Générer un exercice</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div><div class="mb"><div class="fg"><label class="fl">Décrivez ce que vous souhaitez</label><textarea class="fta" style="min-height:90px" id="gex-p" placeholder="Ex: Pressing collectif pour U15, 12 joueurs..."></textarea></div></div><div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" id="gex-btn" onclick="genEx()">${ic('zap')} Générer</button></div>`);}
+async function genEx(){const p=document.getElementById('gex-p')?.value?.trim();if(!p)return;const btn=document.getElementById('gex-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+try{const res=await callAI('Tu es un entraîneur UEFA Pro. Réponds en français.',`Génère un exercice pour: "${p}"\n\nFormat:\nNOM: []\nOBJECTIF: [parmi: ${OBJECTIVES.join(', ')}]\nJOUEURS: [nombre]\nDURÉE: [minutes]\nGARDIEN: oui/non\nDESCRIPTION: [3-4 phrases]\nCONSEIL: [1 conseil]`);
+const lines=res.split('\n'),get=p=>lines.find(l=>l.startsWith(p))?.replace(p,'').trim()||'';
+const ex={id:Date.now(),name:get('NOM:'),objective:get('OBJECTIF:'),players:parseInt(get('JOUEURS:'))||10,duration:parseInt(get('DURÉE:'))||15,goalkeeper:get('GARDIEN:').toLowerCase()==='oui',description:get('DESCRIPTION:'),advice:get('CONSEIL:'),generated:true};
+if(ex.name){S.exercises.push(ex);save();closeMod();pgLib();}}catch(e){if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Réessayer';}}}
+function delEx(id){if(!confirm('Supprimer ?'))return;S.exercises=S.exercises.filter(e=>e.id!==id);save();pgLib();}
+
+// ═══ TAC LIBRARY ════════════════════════════════════════════════
+const TOPICS=[
+  {id:'433',title:'Le 4-3-3',ic:'target',color:'#00e5a0',desc:'Offensif et équilibré'},
+  {id:'442',title:'Le 4-4-2',ic:'target',color:'#4d9fff',desc:'Classique et solide'},
+  {id:'352',title:'Le 3-5-2',ic:'target',color:'#a78bfa',desc:'Contrôle du milieu'},
+  {id:'4231',title:'Le 4-2-3-1',ic:'target',color:'#f97316',desc:'Système moderne'},
+  {id:'ph',title:'Pressing haut',ic:'zap',color:'#ff4d6d',desc:'Récupérer haut'},
+  {id:'bb',title:'Bloc bas',ic:'shield',color:'#f5c842',desc:'Défense compacte'},
+  {id:'pos',title:'Jeu de position',ic:'bulb',color:'#34d399',desc:'Dominer par la possession'},
+  {id:'ca',title:'Contre-attaque',ic:'activity',color:'#f97316',desc:'Exploiter les espaces'},
+  {id:'trans',title:'Transitions',ic:'refresh',color:'#60a5fa',desc:'Changer de phase'},
+  {id:'pa',title:'Phases arrêtées',ic:'star',color:'#e879f9',desc:'Corners, coups francs'},
+];
+const TOPIC_PROMPTS={
+  '433':'Explique le système 4-3-3 de manière pédagogique et complète: rôles de chaque joueur, forces, faiblesses, variantes modernes avec exemples de clubs pros.',
+  '442':'Explique le 4-4-2 classique et ses variantes modernes: rôles, forces, faiblesses, clubs qui l\'utilisent.',
+  '352':'Explique le 3-5-2: rôles des pistons, des 3 défenseurs, du milieu à 3. Forces et faiblesses. Exemples pros.',
+  '4231':'Explique le 4-2-3-1: le double pivot, le meneur de jeu, les ailiers. Forces et risques.',
+  'ph':'Explique le pressing haut: principes, déclencheurs, organisation collective, avantages et risques. Exemples: Klopp, Guardiola.',
+  'bb':'Explique le bloc bas défensif: organisation en 2 lignes, moments d\'utilisation, sorties de balle.',
+  'pos':'Explique le jeu de position (Guardiola): zones, rotations, supériorités positionnelles, triangles.',
+  'ca':'Explique la contre-attaque: organisation, vitesse de transition, profils nécessaires, déclencheurs.',
+  'trans':'Explique les transitions offensives et défensives: importance, organisation, entraînement spécifique.',
+  'pa':'Explique les phases arrêtées offensives et défensives: corners, coups francs, touches. Schémas types.',
+};
+function pgTacLib(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div style="margin-bottom:16px"><p style="font-size:13px;color:var(--txt2)">Cliquez sur un sujet pour obtenir une explication détaillée de l'IA.</p></div>
+  <div class="g3" style="margin-bottom:20px">
+    ${TOPICS.map(t=>`<div class="tac-card" onclick="learnTopic('${t.id}')">
+      <div style="width:38px;height:38px;border-radius:9px;background:${t.color}22;display:flex;align-items:center;justify-content:center;margin-bottom:9px">${ic(t.ic,17).replace('currentColor',t.color)}</div>
+      <div style="font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:3px">${t.title}</div>
+      <div style="font-size:11px;color:var(--txt3)">${t.desc}</div>
+    </div>`).join('')}
+  </div>
+  <div id="tac-lesson"></div>`;
+}
+async function learnTopic(id){
+  const t=TOPICS.find(x=>x.id===id);if(!t)return;
+  const el=document.getElementById('tac-lesson');
+  if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><div style="width:34px;height:34px;border-radius:8px;background:${t.color}22;display:flex;align-items:center;justify-content:center">${ic(t.ic,15).replace('currentColor',t.color)}</div><div style="font-family:var(--fd);font-size:15px;font-weight:700">${t.title}</div></div><div style="text-align:center;padding:20px;color:var(--txt3)"><span class="spin" style="font-size:18px">⏳</span><div style="margin-top:8px;font-size:12px">Préparation du cours...</div></div></div>`;
+  try{
+    const res=await callAI('Tu es un formateur UEFA Pro. Explique de manière pédagogique, structurée et détaillée en français. Utilise des exemples de clubs professionnels et des conseils pratiques pour entraîneurs amateurs.',TOPIC_PROMPTS[id]||`Explique ${t.title} en football de manière complète.`);
+    if(el)el.innerHTML=`<div class="card card-acc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="display:flex;align-items:center;gap:9px"><div style="width:34px;height:34px;border-radius:8px;background:${t.color}22;display:flex;align-items:center;justify-content:center">${ic(t.ic,15).replace('currentColor',t.color)}</div><div style="font-family:var(--fd);font-size:14px;font-weight:700">${t.title}</div></div><span class="tag t-g" style="font-size:9px">${ic('zap',9)} Cours IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${res}</div></div>`;
+  }catch(e){if(el)el.innerHTML=`<div class="card"><p style="color:var(--red);font-size:12px">Erreur de connexion.</p></div>`;}
+}
+
+// ═══ TACTICAL ════════════════════════════════════════════════════
+function pgTactical(){
+  const c=document.getElementById('content');
+  const T=S.tac;
+  c.innerHTML=`<div class="tabs"><div class="tab ${T.tab==='setup'?'active':''}" onclick="tacTab('setup')">Config</div><div class="tab ${T.tab==='pitch'?'active':''}" onclick="tacTab('pitch')">Terrain</div>${T.analysis?`<div class="tab ${T.tab==='analysis'?'active':''}" onclick="tacTab('analysis')">Analyse IA</div>`:''}</div><div id="tac-b"></div>`;
+  tacTab(T.tab||'setup');
+}
+function tacTab(tab){
+  S.tac.tab=tab;const T=S.tac;const el=document.getElementById('tac-b');if(!el)return;
+  if(tab==='setup'){
+    el.innerHTML=`<div class="g2" style="gap:13px;margin-bottom:14px">
+      <div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:11px"><span style="width:9px;height:9px;border-radius:50%;background:var(--acc)"></span><div class="sec-title" style="margin:0">Mon équipe</div></div>
+        <div class="fg"><label class="fl">Système</label><select class="fs" id="my-f" onchange="S.tac.myF=this.value;S.tac.myAssign={}">${Object.keys(FORM).map(f=>`<option${T.myF===f?' selected':''}>${f}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Points forts</label><textarea class="fta" id="my-s" placeholder="Vitesse, pressing...">${T.myStr}</textarea></div>
+        <div class="fg"><label class="fl">Points faibles</label><textarea class="fta" id="my-w" placeholder="Jeu aérien...">${T.myWk}</textarea></div>
+      </div>
+      <div class="card"><div style="display:flex;align-items:center;gap:6px;margin-bottom:11px"><span style="width:9px;height:9px;border-radius:50%;background:var(--red)"></span><div class="sec-title" style="margin:0">Adversaire</div></div>
+        <div class="fg"><label class="fl">Système</label><select class="fs" id="opp-f">${Object.keys(FORM).map(f=>`<option${T.oppF===f?' selected':''}>${f}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Points forts</label><textarea class="fta" id="opp-s" placeholder="Possession...">${T.oppStr}</textarea></div>
+        <div class="fg"><label class="fl">Points faibles</label><textarea class="fta" id="opp-w" placeholder="Défense haute...">${T.oppWk}</textarea></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:9px;flex-wrap:wrap">
+      <button class="btn btn-s" onclick="tacTab('pitch')">${ic('target',13)} Terrain interactif</button>
+      <button class="btn btn-p" style="padding:9px 22px" onclick="runAna()" id="ana-btn">${ic('zap')} Analyser avec l'IA</button>
+    </div>`;
+  } else if(tab==='pitch'){
+    const myPos=FORM[T.myF]||[];const assigned=Object.keys(T.myAssign).length;
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:7px">
+      <div style="display:flex;gap:5px"><span class="tag t-g" style="font-size:10px">${assigned}/11 assignés</span>${!S.players.length?`<span class="tag t-r" style="font-size:10px">Créez des joueurs d'abord</span>`:''}</div>
+      <div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="S.tac.myAssign={};tacTab('pitch')">${ic('x',11)} Effacer</button><button class="btn btn-p btn-sm" onclick="runAna()">${ic('zap',11)} Analyser</button></div>
+    </div>
+    <div class="g2" style="gap:13px;align-items:start">
+      <div>
+        <div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:7px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--acc)"></span>${T.myF} <span style="font-size:9px;color:var(--txt3);font-weight:400">(cliquer pour assigner)</span></div>
+        <div class="pitch-wrap">${pitchSVG(T.myF,T.myAssign,'#00e5a0',true,'mp1')}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:7px">Assignation postes</div>
+        <div style="max-height:450px;overflow-y:auto">
+          ${myPos.map(pos=>{const pid=T.myAssign[pos.id];const pl=pid?S.players.find(p=>p.id===pid):null;const col=pCol(pos.role);return `<div onclick="openAssign('${pos.id}','${pos.label}','${T.myF}')" style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--rs);border:1.5px solid ${pl?'var(--acc)':'var(--bord)'};background:${pl?'var(--acc-d2)':'var(--bg2)'};cursor:pointer;margin-bottom:3px;transition:all .15s">
+            <div style="width:24px;height:24px;border-radius:50%;background:${col}33;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;font-family:var(--fd);color:${col}">${pos.label}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pl?pl.name:pos.role}</div><div style="font-size:9px;color:var(--txt3)">${pl?pos.role:'Cliquer pour assigner'}</div></div>
+            ${pl?`<span style="color:var(--acc)">${ic('check',11)}</span>`:`<span style="color:var(--txt3)">${ic('plus',11)}</span>`}
+          </div>`;}).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:7px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red)"></span>Adversaire — ${T.oppF}</div>
+    <div style="max-width:300px">${pitchSVG(T.oppF,{},'#ff4d6d',false,null,'op1')}</div>`;
+  } else if(tab==='analysis'&&T.analysis){
+    const compo=Object.entries(T.myAssign).map(([pid,plid])=>{const pos=(FORM[T.myF]||[]).find(p=>p.id===pid);const pl=S.players.find(p=>p.id===plid);return pos&&pl?{pos,pl}:null;}).filter(Boolean);
+    const parsed=parseAnalysis(T.analysis);
+    el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:32px;height:32px;border-radius:8px;background:var(--acc-d);display:flex;align-items:center;justify-content:center">${ic('zap',14).replace('currentColor','var(--acc)')}</div>
+        <div><div style="font-family:var(--fd);font-size:15px;font-weight:700">Analyse Tactique IA</div>
+        <div style="font-size:11px;color:var(--txt3)">${T.myF} vs ${T.oppF}</div></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-s btn-sm" onclick="tacTab('pitch')">${ic('target',11)} Terrain</button>
+        <button class="btn btn-s btn-sm" onclick="tacTab('setup')">${ic('edit',11)} Modifier</button>
+        <button class="btn btn-p btn-sm" onclick="runAna()" id="ana-btn2">${ic('zap',11)} Ré-analyser</button>
+      </div>
+    </div>
+    <!-- PITCHES + COMPOSITION -->
+    <div class="g2" style="gap:14px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;font-weight:700;font-family:var(--fd);margin-bottom:7px;display:flex;align-items:center;gap:5px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--acc)"></span>Mon équipe — ${T.myF}
+          ${compo.length>0?'<span class="tag t-g" style="font-size:9px">'+compo.length+'/11 assignés</span>':''}
+        </div>
+        <div class="pitch-wrap">${pitchSVG(T.myF,T.myAssign,'#00e5a0',false,'ana-my')}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;font-family:var(--fd);margin-bottom:7px;display:flex;align-items:center;gap:5px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--red)"></span>Adversaire — ${T.oppF}
+        </div>
+        <div class="pitch-wrap">${pitchSVG(T.oppF,{},'#ff4d6d',false,'ana-opp')}</div>
+      </div>
+    </div>
+    <!-- COMPOSITION CARDS -->
+    ${compo.length?`<div class="card" style="margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:10px">Composition sélectionnée</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${compo.map(({pos,pl})=>{const col=pCol(pos.role);return `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg2);border-radius:20px;border:1px solid var(--bord)">
+          <span style="font-size:10px;font-weight:800;color:${col};font-family:var(--fd)">${pos.label}</span>
+          <span style="font-size:12px;font-weight:600">${pl.name}</span>
+          ${ovRating(pl)>0?`<span style="font-size:10px;font-weight:700;color:${skColor(ovRating(pl))}">${ovRating(pl)}</span>`:''}
+        </div>`;}).join('')}
+      </div>
+    </div>`:''}
+    <!-- ANALYSIS SECTIONS -->
+    <div id="ana-sections">${parsed}</div>
+    `;
+  }
+}
+
+function parseAnalysis(text){
+  if(!text) return '';
+  // Split by numbered sections (1. 2. 3. etc)
+  const sectionColors=['#00e5a0','#4d9fff','#f97316','#ff4d6d','#f5c842','#a78bfa'];
+  const sectionIcons=['target','shield','zap','activity','star','bulb'];
+  const lines=text.split('\n');
+  let html='';
+  let currentSection=null;
+  let currentContent=[];
+  let sectionIdx=0;
+
+  const flushSection=()=>{
+    if(!currentSection) return;
+    const col=sectionColors[sectionIdx%sectionColors.length];
+    const ico_name=sectionIcons[sectionIdx%sectionIcons.length];
+    const bodyText=currentContent.join('\n').trim();
+    // Parse bullet points inside section
+    const bodyHtml=bodyText.split('\n').map(line=>{
+      const trimmed=line.trim();
+      if(!trimmed) return '';
+      if(trimmed.match(/^[-•·▸→]/)){
+        return `<div style="display:flex;gap:7px;margin-bottom:5px;padding:5px 8px;background:var(--bg2);border-radius:6px;border-left:2px solid ${col}"><span style="color:${col};flex-shrink:0;margin-top:1px">▸</span><span style="font-size:12px;color:var(--txt2);line-height:1.5">${trimmed.replace(/^[-•·▸→]\s*/,'')}</span></div>`;
+      }
+      return `<p style="font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:4px">${trimmed}</p>`;
+    }).join('');
+    html+=`<div style="background:var(--surf);border:1px solid var(--bord);border-radius:var(--r);padding:14px;margin-bottom:10px;border-left:3px solid ${col}">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+        <div style="width:26px;height:26px;border-radius:7px;background:${col}22;display:flex;align-items:center;justify-content:center">${ic(ico_name,13).replace('currentColor',col)}</div>
+        <div style="font-family:var(--fd);font-size:13px;font-weight:700;color:${col}">${currentSection}</div>
+      </div>
+      <div>${bodyHtml}</div>
+    </div>`;
+    sectionIdx++;
+    currentSection=null;
+    currentContent=[];
+  };
+
+  for(const line of lines){
+    const m=line.match(/^(\d+\.\s+|[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ][A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞ\s']{3,}[:：]?$)/);
+    if(m||(line.match(/^\d+\./) && line.length<80)){
+      flushSection();
+      currentSection=line.replace(/^\d+\.\s*/,'').replace(/:$/,'').trim();
+    } else if(currentSection){
+      currentContent.push(line);
+    } else if(line.trim()){
+      currentContent.push(line);
+      if(!currentSection) currentSection='Analyse';
+    }
+  }
+  flushSection();
+  // If nothing was parsed with sections, just render as card
+  if(!html && text.trim()){
+    html=`<div class="card"><p style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${text}</p></div>`;
+  }
+  return html;
+}
+
+async function runAna(){
+  const T=S.tac;
+  const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
+  T.myStr=gv('my-s')||T.myStr;T.myWk=gv('my-w')||T.myWk;T.oppStr=gv('opp-s')||T.oppStr;T.oppWk=gv('opp-w')||T.oppWk;
+  const mf=gv('my-f');if(mf)T.myF=mf;const of=gv('opp-f');if(of)T.oppF=of;
+  const btn=document.getElementById('ana-btn')||document.getElementById('ana-btn2');
+  if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span> Analyse...`;}
+  const pos=FORM[T.myF]||[];
+  const cLines=pos.map(p=>{const pid=T.myAssign[p.id];const pl=pid?S.players.find(x=>x.id===pid):null;return pl?`  ${p.role}: ${pl.name}${pl.strengths?.length?' ('+pl.strengths.slice(0,2).join(', ')+')':''}`:null;}).filter(Boolean).join('\n');
+  // Build detailed player info for assigned players
+  const playerDetails=pos.map(p=>{const pid=T.myAssign[p.id];const pl=pid?S.players.find(x=>x.id===pid):null;if(!pl) return null;const ov=ovRating(pl);const topSkills=SKILLS.filter(sk=>(pl.skills?.[sk.key]||0)>=7).slice(0,3).map(sk=>sk.label);return `  ${p.role} – ${pl.name} (note:${ov}/10${topSkills.length?', forces: '+topSkills.join(', '):''}${pl.weaknesses?.length?', axe: '+pl.weaknesses.slice(0,1).join(''):''})`; }).filter(Boolean).join('\n');
+  try{
+    T.analysis=await callAI(
+      'Tu es un analyste tactique UEFA Pro. Fournis une analyse professionnelle et structurée en français. Structure ta réponse avec des titres numérotés clairs (ex: "1. DUEL DE SYSTÈMES") et des points avec des tirets (-) pour les sous-points.',
+      `ANALYSE TACTIQUE:\nMON ÉQUIPE: ${T.myF} | Forces: ${T.myStr||'N/A'} | Faiblesses: ${T.myWk||'N/A'}\n${playerDetails?'COMPOSITION DÉTAILLÉE:\n'+playerDetails:cLines?'COMPOSITION:\n'+cLines:''}\nADVERSAIRE: ${T.oppF} | Forces: ${T.oppStr||'N/A'} | Faiblesses: ${T.oppWk||'N/A'}\n\nFournis 6 sections avec tirets pour les points:\n1. DUEL DE SYSTÈMES — avantages et risques du ${T.myF} face au ${T.oppF}\n2. ZONES D'AVANTAGE — où dominer sur le terrain\n3. PLAN OFFENSIF — 3 stratégies d'attaque concrètes\n4. PLAN DÉFENSIF — comment neutraliser l'adversaire\n5. CLÉS DU MATCH — points décisifs\n6. RECOMMANDATION COACH — conseil prioritaire\n${playerDetails?'\nTiens compte des qualités et faiblesses individuelles dans ton analyse.':''}`
+    );
+    T.tab='analysis';pgTactical();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Analyser';}
+    if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
+  }
+}
+// ═══ PREMATCH ════════════════════════════════════════════════════
+function pgPrematch(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div class="g2" style="gap:14px">
+    <div class="card">
+      <div class="sec-title">${ic('zap',13)} Préparation avant-match</div>
+      <div class="fg"><label class="fl">Adversaire</label>
+        <select class="fs" id="pm-opp" onchange="document.getElementById('pm-cust').style.display=this.value==='custom'?'block':'none'">
+          <option value="">— Choisir —</option>${S.opponents.map(o=>`<option value="${o.id}">${o.name}</option>`).join('')}<option value="custom">Saisir manuellement</option>
+        </select>
+      </div>
+      <div id="pm-cust" style="display:none">
+        <div class="fg"><label class="fl">Nom adversaire</label><input class="fi" id="pm-on" placeholder="FC Rivaux"></div>
+        <div class="fg"><label class="fl">Système</label><select class="fs" id="pm-of">${Object.keys(FORM).map(f=>`<option>${f}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Infos adversaire</label><textarea class="fta" id="pm-oi" placeholder="Points forts, faiblesses..."></textarea></div>
+      </div>
+      <div class="fg"><label class="fl">Joueurs disponibles</label>
+        <div style="max-height:180px;overflow-y:auto;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:7px">
+          ${S.players.length?S.players.map(p=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 0;cursor:pointer;border-bottom:1px solid var(--bord)"><input type="checkbox" checked id="pm-p-${p.id}" style="accent-color:var(--acc)">${portrait(p,22)}<span style="font-size:11px">${p.name} <span style="color:var(--txt3);font-size:9px">${p.position}</span></span></label>`).join(''):'<p style="font-size:12px;color:var(--txt3)">Aucun joueur.</p>'}
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Mon système</label><select class="fs" id="pm-mf">${Object.keys(FORM).map(f=>`<option${S.tac.myF===f?' selected':''}>${f}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Contexte</label><input class="fi" id="pm-ctx" placeholder="Match décisif, terrain synthétique..."></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center" onclick="genPM()" id="pm-btn">${ic('zap')} Générer l'analyse</button>
+    </div>
+    <div id="pm-res"><div class="card" style="text-align:center;padding:26px;color:var(--txt3);font-size:13px">Sélectionnez l'adversaire et lancez l'analyse.</div></div>
+  </div>`;
+}
+async function genPM(){
+  const oppSel=document.getElementById('pm-opp').value;
+  const oppObj=oppSel&&oppSel!=='custom'?S.opponents.find(o=>o.id===oppSel):null;
+  const oppName=oppObj?.name||document.getElementById('pm-on')?.value||'Adversaire';
+  const oppForm=oppObj?.formation||document.getElementById('pm-of')?.value||'4-4-2';
+  const oppInfo=oppObj?(oppObj.strengths?.join(', ')||'')+' | '+(oppObj.weaknesses?.join(', ')||''):document.getElementById('pm-oi')?.value||'';
+  const myForm=document.getElementById('pm-mf')?.value||'4-3-3';
+  const ctx=document.getElementById('pm-ctx')?.value||'';
+  const avail=S.players.filter(p=>document.getElementById('pm-p-'+p.id)?.checked);
+  const btn=document.getElementById('pm-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+  const pList=avail.slice(0,15).map(p=>`${p.name}(${p.position}${ovRating(p)?','+ovRating(p):''}/10)`).join(', ');
+  try{
+    const res=await callAI('Tu es un coach UEFA Pro. Génère une analyse d\'avant-match complète et professionnelle en français.',
+      `Avant-match:\nMON ÉQUIPE: ${myForm}${pList?' | Joueurs: '+pList:''}\nADVERSAIRE: ${oppName} en ${oppForm}${oppInfo?' | '+oppInfo:''}\n${ctx?'CONTEXTE: '+ctx:''}\n\n1. RÉSUMÉ ADVERSAIRE (3-4 phrases)\n2. POINTS FORTS ADVERSES (3-4 éléments)\n3. FAIBLESSES À EXPLOITER (3-4 zones)\n4. PLAN DE JEU (offensif + défensif)\n5. COMPOSITION SUGGÉRÉE pour ${myForm}\n6. CONSIGNES D'AVANT-MATCH (5-6 points)\n7. CLÉS DU MATCH (2-3 éléments décisifs)`);
+    const el=document.getElementById('pm-res');
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('zap',13)} vs ${oppName}</div><span class="tag t-g" style="font-size:9px">IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${res}</div></div>`;
+  }catch(e){
+    if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Régénérer';}
+}
+
+// ═══ SPEECH ══════════════════════════════════════════════════════
+function pgSpeech(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div class="g2" style="gap:14px">
+    <div class="card">
+      <div class="sec-title">${ic('mic',13)} Générateur de causerie</div>
+      <div class="fg"><label class="fl">Adversaire</label><input class="fi" id="sp-opp" placeholder="FC Rivaux"></div>
+      <div class="fg"><label class="fl">Enjeu du match</label><select class="fs" id="sp-enj"><option>Match de championnat</option><option>Match de coupe</option><option>Derby local</option><option>Match décisif pour le maintien</option><option>Match pour la montée</option><option>Match amical</option><option>Tournoi</option></select></div>
+      <div class="fg"><label class="fl">Contexte équipe</label><textarea class="fta" id="sp-ctx" placeholder="Série de victoires, défaites, moral, blessures..."></textarea></div>
+      <div class="fg"><label class="fl">Ton souhaité</label><select class="fs" id="sp-tone"><option>Motivant et passionné</option><option>Calme et analytique</option><option>Intense et guerrier</option><option>Positif et encourageant</option><option>Sérieux et concentré</option></select></div>
+      <div class="fg"><label class="fl">Durée</label><select class="fs" id="sp-dur"><option>Courte (2 min)</option><option>Moyenne (4 min)</option><option>Longue (7 min)</option></select></div>
+      <div class="fg"><label class="fl">Message clé</label><input class="fi" id="sp-msg" placeholder="Solidarité, agressivité défensive, concentration..."></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center" onclick="genSpeech()" id="sp-btn">${ic('mic')} Générer la causerie</button>
+    </div>
+    <div id="sp-res"><div class="card" style="text-align:center;padding:26px;color:var(--txt3);font-size:13px">Remplissez le formulaire pour générer votre discours personnalisé.</div></div>
+  </div>`;
+}
+async function genSpeech(){
+  const btn=document.getElementById('sp-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+  const opp=document.getElementById('sp-opp').value,enj=document.getElementById('sp-enj').value,ctx=document.getElementById('sp-ctx').value,tone=document.getElementById('sp-tone').value,dur=document.getElementById('sp-dur').value,msg=document.getElementById('sp-msg').value;
+  try{
+    const res=await callAI('Tu es un entraîneur de football charismatique. Tu écris des causeries d\'avant-match authentiques, émotionnelles et efficaces en français.',
+      `Causerie d'avant-match.\nAdversaire: ${opp||'l\'adversaire'} | Enjeu: ${enj} | Contexte: ${ctx||'standard'} | Ton: ${tone} | Durée: ${dur} | Message clé: ${msg||'la victoire'}\n\nÉcris une causerie structurée (intro accrocheuse → analyse → message clé → conclusion motivante), authentique, adaptée au ton demandé, directement adressée aux joueurs.`);
+    const el=document.getElementById('sp-res');
+    if(el)el.innerHTML=`<div class="card card-gold"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('mic',13)} Causerie vs ${opp||'l\'adversaire'}</div><span class="tag t-go" style="font-size:9px">IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.85;white-space:pre-wrap;font-style:italic">"${res}"</div></div>`;
+  }catch(e){
+    if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML=ic('mic')+' Régénérer';}
+}
+
+// ═══ SITUATION ════════════════════════════════════════════════════
+function pgSit(){
+  const c=document.getElementById('content');
+  c.innerHTML=`
+  <div class="g2" style="gap:14px">
+    <div class="card">
+      <div class="sec-title">${ic('clock',13)} Situation de match</div>
+      <div class="fg"><label class="fl">Minute</label><input class="fi" type="number" id="si-min" value="75" min="1" max="120"></div>
+      <div class="fg"><label class="fl">Score</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="fi" type="number" id="si-ms" value="1" min="0" style="width:55px;text-align:center">
+          <span style="color:var(--txt3);font-weight:700">–</span>
+          <input class="fi" type="number" id="si-os" value="1" min="0" style="width:55px;text-align:center">
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Mon système</label><select class="fs" id="si-mf">${Object.keys(FORM).map(f=>`<option${S.tac.myF===f?' selected':''}>${f}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Système adverse</label><select class="fs" id="si-of">${Object.keys(FORM).map(f=>`<option${S.tac.oppF===f?' selected':''}>${f}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">Situation</label><select class="fs" id="si-ctx"><option>Domination adverse</option><option>Je domine</option><option>Match équilibré</option><option>Équipe fatiguée</option><option>Supériorité numérique (+1)</option><option>Infériorité numérique (-1)</option><option>Besoin de marquer</option><option>Défendre un avantage</option></select></div>
+      <div class="fg"><label class="fl">Banc disponible</label><textarea class="fta" id="si-bench" placeholder="Joueur rapide, milieu défensif frais..."></textarea></div>
+      <div class="fg"><label class="fl">Problèmes identifiés</label><textarea class="fta" id="si-iss" placeholder="Perd les duels aériens, transitions lentes..."></textarea></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center" onclick="genSit()" id="si-btn">${ic('zap')} Analyser la situation</button>
+    </div>
+    <div id="si-res"><div class="card" style="text-align:center;padding:26px;color:var(--txt3);font-size:13px">Décrivez votre situation pour obtenir des recommandations immédiates.</div></div>
+  </div>`;
+}
+async function genSit(){
+  const btn=document.getElementById('si-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+  const min=document.getElementById('si-min').value,ms=document.getElementById('si-ms').value,os=document.getElementById('si-os').value,mf=document.getElementById('si-mf').value,of=document.getElementById('si-of').value,ctx=document.getElementById('si-ctx').value,bench=document.getElementById('si-bench').value,iss=document.getElementById('si-iss').value;
+  try{
+    const res=await callAI('Tu es un coach UEFA Pro. Donne des conseils tactiques précis et immédiatement applicables en français.',
+      `SITUATION: ${min}e min | Score: ${ms}-${os} (${parseInt(ms)>parseInt(os)?'je mène':parseInt(ms)<parseInt(os)?'je suis mené':'égalité'})\n🔵 Mon équipe: ${mf} | 🔴 Adversaire: ${of}\nSituation: ${ctx}${bench?'\nBanc: '+bench:''}${iss?'\nProblèmes: '+iss:''}\n\n1. LECTURE (2-3 phrases)\n2. CHANGEMENTS TACTIQUES\n3. SUBSTITUTIONS et pourquoi\n4. CONSIGNES IMMÉDIATES (4-5 points)\n5. GESTION DU TEMPS RESTANT\n6. SCÉNARIO IDÉAL`);
+    const sc=parseInt(ms)>parseInt(os)?'t-g':parseInt(ms)<parseInt(os)?'t-r':'t-go';
+    const el=document.getElementById('si-res');
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:9px;margin-bottom:13px"><div style="font-family:var(--fd);font-size:20px;font-weight:800">${ms} – ${os}</div><span class="tag ${sc}">${min}'</span><span style="font-size:11px;color:var(--txt3)">${mf} vs ${of}</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${res}</div></div>`;
+  }catch(e){
+    if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Ré-analyser';}
+}
+
+// ═══ OPPONENTS ════════════════════════════════════════════════════
+function pgOpponents(){
+  const c=document.getElementById('content');
+  c.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-p" onclick="openAddOpp()">${ic('plus')} Nouvel adversaire</button></div>
+  ${!S.opponents.length?`<div class="empty"><div class="empty-ico">${ic('flag',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucun adversaire</div><button class="btn btn-p" style="margin-top:12px" onclick="openAddOpp()">${ic('plus')} Ajouter</button></div>`:
+  `<div class="g3">${S.opponents.map(o=>`<div class="card card-h" onclick="viewOpp('${o.id}')"><div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:34px;height:34px;border-radius:8px;background:var(--red-d);display:flex;align-items:center;justify-content:center">${ic('flag',14).replace('currentColor','var(--red)')}</div><div><div style="font-family:var(--fd);font-size:13px;font-weight:800">${o.name}</div><div style="font-size:10px;color:var(--txt3)">${o.formation}</div></div></div>${o.weaknesses?.length?`<div style="display:flex;gap:3px;flex-wrap:wrap">${o.weaknesses.slice(0,2).map(w=>`<span class="tag t-g" style="font-size:9px">${w}</span>`).join('')}</div>`:''}</div>`).join('')}</div>`}`;
+}
+function openAddOpp(){openMod(`<div class="mh"><span class="mt">Nouvel adversaire</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div><div class="mb"><div class="fg"><label class="fl">Nom *</label><input class="fi" id="of-n" placeholder="FC Rivaux"></div><div class="fg"><label class="fl">Système</label><select class="fs" id="of-f">${Object.keys(FORM).map(f=>`<option>${f}</option>`).join('')}</select></div><div class="fg"><label class="fl">Points forts (virgules)</label><input class="fi" id="of-s" placeholder="Jeu aérien, Pressing"></div><div class="fg"><label class="fl">Points faibles (virgules)</label><input class="fi" id="of-w" placeholder="Défense haute, Transitions"></div><div class="fg"><label class="fl">Notes</label><textarea class="fta" id="of-no"></textarea></div></div><div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" onclick="saveOpp()">${ic('plus')} Créer</button></div>`);}
+function saveOpp(){const n=document.getElementById('of-n')?.value?.trim();if(!n)return;S.opponents.push({id:String(Date.now()),name:n,formation:document.getElementById('of-f').value,strengths:document.getElementById('of-s').value.split(',').map(s=>s.trim()).filter(Boolean),weaknesses:document.getElementById('of-w').value.split(',').map(s=>s.trim()).filter(Boolean),notes:document.getElementById('of-no').value.trim()});save();closeMod();pgOpponents();}
+function viewOpp(id){
+  const o=S.opponents.find(x=>x.id===id);if(!o)return;
+  const c=document.getElementById('content');
+  c.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><button class="btn-ico" onclick="nav('opponents')">${ic('back')}</button><div style="flex:1"><div style="font-family:var(--fd);font-size:17px;font-weight:800">${o.name}</div><div style="font-size:11px;color:var(--txt3)">${o.formation}</div></div><button class="btn btn-p btn-sm" onclick="S.tac.oppF='${o.formation}';S.tac.oppStr='${o.strengths?.join(', ')||''}';S.tac.oppWk='${o.weaknesses?.join(', ')||''}';nav('prematch')">${ic('zap',11)} Préparer match</button><button class="btn-ico btn-sm" style="color:var(--red)" onclick="delOpp('${o.id}')">${ic('trash',11)}</button></div>
+  <div class="g2" style="gap:13px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${o.strengths?.length?`<div class="card"><div class="sec-title" style="color:var(--red)">⚠ Points forts adverses</div><div style="display:flex;gap:4px;flex-wrap:wrap">${o.strengths.map(s=>`<span class="tag t-r">${s}</span>`).join('')}</div></div>`:''}
+      ${o.weaknesses?.length?`<div class="card"><div class="sec-title" style="color:var(--acc)">✦ Faiblesses à exploiter</div><div style="display:flex;gap:4px;flex-wrap:wrap">${o.weaknesses.map(w=>`<span class="tag t-g">${w}</span>`).join('')}</div></div>`:''}
+      ${o.notes?`<div class="card"><div class="sec-title">Notes</div><p style="font-size:12px;color:var(--txt2);line-height:1.5">${o.notes}</p></div>`:''}
+    </div>
+    <div><div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:7px">${o.formation}</div><div class="pitch-wrap">${pitchSVG(o.formation,{},'#ff4d6d',false,null,'ovp')}</div></div>
+  </div>`;
+}
+function delOpp(id){if(!confirm('Supprimer ?'))return;S.opponents=S.opponents.filter(o=>o.id!==id);save();nav('opponents');}
+
+// ═══ REPORTS ════════════════════════════════════════════════════
+function pgReports(){
+  const c=document.getElementById('content');
+  c.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-p" onclick="openAddReport()">${ic('plus')} Nouveau rapport</button></div>
+  ${!S.reports.length?`<div class="empty"><div class="empty-ico">${ic('clip',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucun rapport</div><button class="btn btn-p" style="margin-top:12px" onclick="openAddReport()">${ic('plus')} Créer</button></div>`:
+  `<div style="display:flex;flex-direction:column;gap:11px">${S.reports.map(r=>`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="display:flex;align-items:center;gap:7px"><div style="width:32px;height:32px;border-radius:7px;background:var(--acc-d);display:flex;align-items:center;justify-content:center">${ic('activity',13).replace('currentColor','var(--acc)')}</div><div><div style="font-family:var(--fd);font-size:12px;font-weight:700">vs ${r.opponent}</div><div style="font-size:10px;color:var(--txt3)">${r.date}${r.score?' · '+r.score:''}</div></div></div><div style="display:flex;gap:3px"><span class="tag t-g" style="font-size:9px">Analysé</span><button class="btn-ico" style="padding:2px;color:var(--red)" onclick="delReport('${r.id}')">${ic('trash',11)}</button></div></div><div style="background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:9px"><p style="font-size:12px;color:var(--txt2);line-height:1.65;white-space:pre-wrap">${r.analysis}</p></div></div>`).join('')}</div>`}`;
+}
+function openAddReport(){openMod(`<div class="mh"><span class="mt">Nouveau rapport</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div><div class="mb"><div class="g2"><div class="fg"><label class="fl">Adversaire</label><input class="fi" id="rf-o" placeholder="FC Rivaux"></div><div class="fg"><label class="fl">Score</label><input class="fi" id="rf-sc" placeholder="2-1"></div><div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="rf-d" value="${new Date().toISOString().split('T')[0]}"></div></div><div class="fg"><label class="fl">Rapport *</label><textarea class="fta" style="min-height:110px" id="rf-t" placeholder="Performances individuelles, phases de jeu, buts, erreurs..."></textarea></div><div style="background:var(--acc-d);border:1px solid rgba(0,229,160,.18);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--txt2)">${ic('zap',10)} L'IA analysera et mettra à jour les profils joueurs.</div></div><div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" id="rf-btn" onclick="saveReport()">${ic('zap')} Analyser</button></div>`,'modal-lg');}
+async function saveReport(){const t=document.getElementById('rf-t')?.value?.trim();if(!t)return;const btn=document.getElementById('rf-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
+try{const res=await callAI('Tu es un analyste football professionnel. Réponds en français de façon structurée.',`Analyse ce rapport.\nAdversaire: ${document.getElementById('rf-o').value||'N/A'}\nScore: ${document.getElementById('rf-sc').value||'N/A'}\nRapport: ${t}\n\n1. RÉSUMÉ DU MATCH\n2. PERFORMANCES NOTABLES\n3. COLLECTIF: axes à améliorer\n4. RECOMMANDATIONS ENTRAÎNEMENT\n5. MISE À JOUR JOUEURS: [Nom] → [force / axe progression]`);
+S.reports.push({id:String(Date.now()),opponent:document.getElementById('rf-o').value,score:document.getElementById('rf-sc').value,date:document.getElementById('rf-d').value,report:t,analysis:res});save();closeMod();pgReports();}catch(e){if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Réessayer';}}}
+function delReport(id){if(!confirm('Supprimer ?'))return;S.reports=S.reports.filter(r=>r.id!==id);save();pgReports();}
+
+// ═══ BOOT ════════════════════════════════════════════════════════
+buildNav();nav('dashboard');
+
+
+// ═══ SERVICE WORKER REGISTRATION ══════════════════════════════
+if('serviceWorker' in navigator){
+  window.addEventListener('load', async ()=>{
+    try{
+      const reg = await navigator.serviceWorker.register('sw.js');
+      console.log('Coach Vision SW registered:', reg.scope);
+      reg.addEventListener('updatefound', ()=>{
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', ()=>{
+          if(newWorker.state==='installed' && navigator.serviceWorker.controller){
+            showToast('Mise à jour disponible — Rechargez l\'app ↺','#4d9fff');
+          }
+        });
+      });
+    }catch(e){
+      console.log('SW registration failed (normal in file://):', e.message);
+    }
+  });
+}
+
+// ═══ PWA INSTALL PROMPT ═══════════════════════════════════════
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install button in topbar
+  setTimeout(()=>{
+    const btn = document.createElement('button');
+    btn.id = 'pwa-install-btn';
+    btn.style.cssText = 'background:var(--acc);color:#000;border:none;border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--fb);display:flex;align-items:center;gap:4px;flex-shrink:0;animation:fd .3s ease';
+    btn.innerHTML = '📲 Installer';
+    btn.onclick = installPWA;
+    const topbar = document.querySelector('.topbar > div:last-child');
+    if(topbar) topbar.insertBefore(btn, topbar.firstChild);
+  }, 2000);
+});
+
+async function installPWA(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const {outcome} = await deferredInstallPrompt.userChoice;
+  if(outcome==='accepted'){
+    showToast('Coach Vision installé ! ✓','#00e5a0');
+    document.getElementById('pwa-install-btn')?.remove();
+  }
+  deferredInstallPrompt = null;
+}
+
+window.addEventListener('appinstalled', ()=>{
+  showToast('Coach Vision est installé sur votre téléphone ✓','#00e5a0');
+  deferredInstallPrompt = null;
+  document.getElementById('pwa-install-btn')?.remove();
+});
+
+</script></body></html>
