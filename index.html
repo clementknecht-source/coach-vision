@@ -240,10 +240,10 @@ const S={
   ])),
   opponents:JSON.parse(localStorage.getItem('cv_opponents')||'[]'),
   reports:JSON.parse(localStorage.getItem('cv_reports')||'[]'),
-  tac:{myF:'4-3-3',oppF:'4-4-2',myAssign:{},myStr:'',myWk:'',oppStr:'',oppWk:'',analysis:'',tab:'setup'},
+  tac:Object.assign({myF:'4-3-3',oppF:'4-4-2',myAssign:{},myStr:'',myWk:'',oppStr:'',oppWk:'',analysis:'',tab:'setup',subs:[]},JSON.parse(localStorage.getItem('cv_tac')||'{}')),
   _libFilter:'Tous',_aiMsgs:[],_compAvail:null,
 };
-function save(){['players','sessions','exercises','opponents','reports'].forEach(k=>localStorage.setItem('cv_'+k,JSON.stringify(S[k])));}
+function save(){['players','sessions','exercises','opponents','reports'].forEach(k=>localStorage.setItem('cv_'+k,JSON.stringify(S[k])));localStorage.setItem('cv_tac',JSON.stringify(S.tac));}
 
 // ═══ FORMATIONS ═══════════════════════════════════════════════
 const FORM={
@@ -367,6 +367,16 @@ function toggleSB(){document.getElementById('sidebar').classList.toggle('open');
 function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('open');}
 
 // ═══ FORMAT RÉSULTATS IA ══════════════════════════════════════
+function mdInline(t){
+  // **gras** → <strong>
+  t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  // *italique* → <em> (uniquement si pas déjà traité)
+  t = t.replace(/(?<!\*)\*(?!\*)([^*]+?)(?<!\*)\*(?!\*)/g,'<em>$1</em>');
+  // _souligné_ → <em>
+  t = t.replace(/_(.*?)_/g,'<em>$1</em>');
+  return t;
+}
+
 function formatAI(text){
   if(!text) return '';
   const lines = text.split('\n');
@@ -375,49 +385,60 @@ function formatAI(text){
 
   for(let raw of lines){
     const line = raw.trim();
-    if(!line){ if(inList){html+='</ul>';inList=false;} html+=''; continue; }
+    if(!line){ if(inList){html+='</ul>';inList=false;} continue; }
 
-    // Titre niveau 1 : ## Titre
-    if(/^##\s+/.test(line)){
-      if(inList){html+='</ul>';inList=false;}
-      const t = line.replace(/^##\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-      html+=`<div class="ai-section-title">${t}</div>`;
-    }
-    // Titre niveau 2 : ### Titre
-    else if(/^###\s+/.test(line)){
-      if(inList){html+='</ul>';inList=false;}
-      const t = line.replace(/^###\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-      html+=`<div class="ai-sub-title">${t}</div>`;
-    }
-    // Ligne de séparation ---
-    else if(/^---+$/.test(line)){
+    // Séparateur ---
+    if(/^---+$/.test(line)){
       if(inList){html+='</ul>';inList=false;}
       html+=`<hr class="ai-sep">`;
     }
-    // Bullet point - ou *
-    else if(/^[-*•]\s+/.test(line)){
+    // Titre ## ou ###
+    else if(/^#{1,3}\s+/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const t = mdInline(line.replace(/^#{1,3}\s+/,'').replace(/:$/,''));
+      const isMain = /^#{1,2}\s/.test(line);
+      html+=`<div class="${isMain?'ai-section-title':'ai-sub-title'}">${t}</div>`;
+    }
+    // Ligne entièrement en gras **TITRE** = titre de section
+    else if(/^\*\*[^*]+\*\*:?\s*$/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const t = line.replace(/\*\*/g,'').replace(/:$/,'');
+      html+=`<div class="ai-sub-title">${t}</div>`;
+    }
+    // Numérotation 1. 2. etc (titre de section)
+    else if(/^\d+[\.\)]\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜ]/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const num = line.match(/^(\d+)/)[1];
+      const t = mdInline(line.replace(/^\d+[\.\)]\s+/,'').replace(/:$/,''));
+      html+=`<div class="ai-section-title" style="font-size:13px"><span class="ai-num" style="display:inline-flex;margin-right:8px">${num}</span>${t}</div>`;
+    }
+    // Bullet - ou • ou ▸ ou →
+    else if(/^[-•▸→✓✗]\s+/.test(line)){
       if(!inList){html+='<ul class="ai-list">';inList=true;}
-      const t = line.replace(/^[-*•]\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      const t = mdInline(line.replace(/^[-•▸→✓✗]\s+/,''));
       html+=`<li>${t}</li>`;
     }
-    // Numérotation 1. 2. etc
-    else if(/^\d+\.\s+/.test(line)){
+    // Numérotation simple 1. texte minuscule = liste numérotée
+    else if(/^\d+[\.\)]\s+/.test(line)){
       if(inList){html+='</ul>';inList=false;}
-      const num = line.match(/^(\d+)\./)[1];
-      const t = line.replace(/^\d+\.\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      const num = line.match(/^(\d+)/)[1];
+      const t = mdInline(line.replace(/^\d+[\.\)]\s+/,''));
       html+=`<div class="ai-numbered"><span class="ai-num">${num}</span><span>${t}</span></div>`;
     }
-    // Emoji en début = badge coloré
-    else if(/^[🔴🟡🟢⚡🎯💡⚠️✅❌🏆👥🔥💪🧠📊]/u.test(line)){
+    // Emoji en début = point mis en avant
+    else if(/^\p{Emoji}/u.test(line)){
       if(inList){html+='</ul>';inList=false;}
-      const t = line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-      html+=`<div class="ai-highlight">${t}</div>`;
+      html+=`<div class="ai-highlight">${mdInline(line)}</div>`;
+    }
+    // **Label:** contenu = ligne avec label gras
+    else if(/^\*\*[^*]+\*\*\s*:/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      html+=`<p class="ai-p">${mdInline(line)}</p>`;
     }
     // Texte normal
     else {
       if(inList){html+='</ul>';inList=false;}
-      const t = line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-      html+=`<p class="ai-p">${t}</p>`;
+      html+=`<p class="ai-p">${mdInline(line)}</p>`;
     }
   }
   if(inList) html+='</ul>';
@@ -804,8 +825,9 @@ async function analyzePlayer(id){
   const btn=document.getElementById('pa-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
   const skTxt=SKILLS.filter(sk=>p.skills?.[sk.key]).map(sk=>`${sk.label}:${p.skills[sk.key]}/10`).join(', ');
   try{
-    const res=await callAI('Tu es un recruteur et analyste football professionnel. Réponds en français.',
-      `Analyse ce profil joueur.\nNom:${p.name} | Poste:${p.position} | Pied:${p.foot||'D'} | Âge:${p.age||'?'}\nAttributs: ${skTxt||'Non renseignés'}\nPoints forts: ${p.strengths?.join(', ')||'N/A'}\nAxes progression: ${p.weaknesses?.join(', ')||'N/A'}\n\nFournis:\n1. PROFIL (2 phrases)\n2. POSTE IDÉAL et postes alternatifs possibles avec justification\n3. POINTS FORTS à développer\n4. AXES PRIORITAIRES à travailler\n5. EXERCICES RECOMMANDÉS (2-3 exercices spécifiques)\n6. POTENTIEL sur 12 mois`);
+    const res=await callAI(
+      'Tu es un recruteur et analyste football professionnel. Réponds en français. Structure ta réponse avec des titres ## et des listes avec tirets -. Pas de texte avec des astérisques isolés.',
+      `Analyse ce profil joueur.\nNom: ${p.name} | Poste: ${p.position} | Pied: ${p.foot||'Droit'} | Âge: ${p.age||'?'} ans\nAttributs techniques: ${skTxt||'Non renseignés'}\nPoints forts déclarés: ${p.strengths?.join(', ')||'N/A'}\nAxes de progression: ${p.weaknesses?.join(', ')||'N/A'}\n\n## PROFIL\nRédige 2 phrases décrivant ce joueur.\n\n## POSTE IDÉAL\nIndique son poste idéal et 1-2 postes alternatifs avec justification courte.\n\n## POINTS FORTS\nListe 3-4 points forts avec tirets -\n\n## AXES PRIORITAIRES\nListe 3 axes de progression avec tirets -\n\n## EXERCICES RECOMMANDÉS\nPropose 3 exercices spécifiques avec tirets -\n\n## POTENTIEL 12 MOIS\nÉvaluation du potentiel de progression en 2 phrases.`);
     const el=document.getElementById('pa-res');if(el)el.innerHTML=`<div class="ai-result-wrap">${formatAI(res)}</div>`;
   }catch(e){const el=document.getElementById('pa-res');if(el)el.textContent='Erreur de connexion.';}
   if(btn){btn.disabled=false;btn.innerHTML=ic('refresh',12)+' Ré-analyser';}
@@ -1130,7 +1152,21 @@ function tacTab(tab){
     </div>
     <div class="divider"></div>
     <div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:7px;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red)"></span>Adversaire — ${T.oppF}</div>
-    <div style="max-width:300px">${pitchSVG(T.oppF,{},'#ff4d6d',false,null,'op1')}</div>`;
+    <div style="max-width:300px">${pitchSVG(T.oppF,{},'#ff4d6d',false,null,'op1')}</div>
+    <div class="divider"></div>
+    <div style="font-size:12px;font-weight:700;font-family:var(--fd);margin-bottom:9px;display:flex;align-items:center;gap:5px">${ic('users',13)} Remplaçants <span style="font-size:9px;color:var(--txt3);font-weight:400">(sélectionner jusqu'à 7)</span></div>
+    ${S.players.length?`<div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${S.players.filter(p=>!Object.values(T.myAssign).includes(p.id)).map(p=>{
+        const isSub=(T.subs||[]).includes(p.id);
+        return `<div onclick="toggleSub('${p.id}')" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:${isSub?'var(--acc-d)':'var(--bg2)'};border:1.5px solid ${isSub?'var(--acc)':'var(--bord)'};border-radius:20px;cursor:pointer;transition:all .15s">
+          ${portrait(p,20)}
+          <span style="font-size:11px;font-weight:${isSub?'700':'400'};color:${isSub?'var(--acc)':'var(--txt2)'}">${p.name}</span>
+          <span style="font-size:9px;color:var(--txt3)">${p.position}</span>
+          ${isSub?`<span style="color:var(--acc);font-size:10px">✓</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>`:'<p style="font-size:12px;color:var(--txt3)">Aucun joueur disponible.</p>'}
+    `;
   } else if(tab==='analysis'&&T.analysis){
     const compo=Object.entries(T.myAssign).map(([pid,plid])=>{const pos=(FORM[T.myF]||[]).find(p=>p.id===pid);const pl=S.players.find(p=>p.id===plid);return pos&&pl?{pos,pl}:null;}).filter(Boolean);
     const parsed=parseAnalysis(T.analysis);
@@ -1165,12 +1201,23 @@ function tacTab(tab){
     </div>
     <!-- COMPOSITION CARDS -->
     ${compo.length?`<div class="card" style="margin-bottom:14px">
-      <div class="sec-title" style="margin-bottom:10px">Composition sélectionnée</div>
+      <div class="sec-title" style="margin-bottom:10px">${ic('users',12)} Composition titulaire</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px">
         ${compo.map(({pos,pl})=>{const col=pCol(pos.role);return `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg2);border-radius:20px;border:1px solid var(--bord)">
           <span style="font-size:10px;font-weight:800;color:${col};font-family:var(--fd)">${pos.label}</span>
           <span style="font-size:12px;font-weight:600">${pl.name}</span>
           ${ovRating(pl)>0?`<span style="font-size:10px;font-weight:700;color:${skColor(ovRating(pl))}">${ovRating(pl)}</span>`:''}
+        </div>`;}).join('')}
+      </div>
+    </div>`:''}
+    <!-- REMPLAÇANTS -->
+    ${(T.subs||[]).length?`<div class="card" style="margin-bottom:14px;border-left:3px solid var(--blue)">
+      <div class="sec-title" style="margin-bottom:10px;color:var(--blue)">${ic('refresh',12)} Remplaçants sélectionnés</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${(T.subs||[]).map(pid=>{const pl=S.players.find(p=>p.id===pid);if(!pl)return '';const ov=ovRating(pl);return `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--blue-d);border-radius:20px;border:1px solid var(--blue)">
+          <span style="font-size:10px;color:var(--txt3)">${pl.position}</span>
+          <span style="font-size:12px;font-weight:600">${pl.name}</span>
+          ${ov>0?`<span style="font-size:10px;font-weight:700;color:${skColor(ov)}">${ov}</span>`:''}
         </div>`;}).join('')}
       </div>
     </div>`:''}
@@ -1237,6 +1284,15 @@ function parseAnalysis(text){
   return html;
 }
 
+function toggleSub(pid){
+  if(!S.tac.subs) S.tac.subs=[];
+  const idx=S.tac.subs.indexOf(pid);
+  if(idx>=0) S.tac.subs.splice(idx,1);
+  else if(S.tac.subs.length<7) S.tac.subs.push(pid);
+  save();
+  tacTab('pitch');
+}
+
 async function runAna(){
   const T=S.tac;
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
@@ -1248,10 +1304,11 @@ async function runAna(){
   const cLines=pos.map(p=>{const pid=T.myAssign[p.id];const pl=pid?S.players.find(x=>x.id===pid):null;return pl?`  ${p.role}: ${pl.name}${pl.strengths?.length?' ('+pl.strengths.slice(0,2).join(', ')+')':''}`:null;}).filter(Boolean).join('\n');
   // Build detailed player info for assigned players
   const playerDetails=pos.map(p=>{const pid=T.myAssign[p.id];const pl=pid?S.players.find(x=>x.id===pid):null;if(!pl) return null;const ov=ovRating(pl);const topSkills=SKILLS.filter(sk=>(pl.skills?.[sk.key]||0)>=7).slice(0,3).map(sk=>sk.label);return `  ${p.role} – ${pl.name} (note:${ov}/10${topSkills.length?', forces: '+topSkills.join(', '):''}${pl.weaknesses?.length?', axe: '+pl.weaknesses.slice(0,1).join(''):''})`; }).filter(Boolean).join('\n');
+  const subPlayers=(T.subs||[]).map(pid=>{const pl=S.players.find(p=>p.id===pid);if(!pl)return null;const ov=ovRating(pl);const topSk=SKILLS.filter(sk=>(pl.skills?.[sk.key]||0)>=7).slice(0,2).map(sk=>sk.label);return `  ${pl.position} – ${pl.name}${ov>0?' (note:'+ov+'/10)':''}${topSk.length?', forces: '+topSk.join(', '):''}`;}).filter(Boolean).join('\n');
   try{
     T.analysis=await callAI(
-      'Tu es un analyste tactique UEFA Pro. Fournis une analyse professionnelle et structurée en français. Structure ta réponse avec des titres numérotés clairs (ex: "1. DUEL DE SYSTÈMES") et des points avec des tirets (-) pour les sous-points.',
-      `ANALYSE TACTIQUE:\nMON ÉQUIPE: ${T.myF} | Forces: ${T.myStr||'N/A'} | Faiblesses: ${T.myWk||'N/A'}\n${playerDetails?'COMPOSITION DÉTAILLÉE:\n'+playerDetails:cLines?'COMPOSITION:\n'+cLines:''}\nADVERSAIRE: ${T.oppF} | Forces: ${T.oppStr||'N/A'} | Faiblesses: ${T.oppWk||'N/A'}\n\nFournis 6 sections avec tirets pour les points:\n1. DUEL DE SYSTÈMES — avantages et risques du ${T.myF} face au ${T.oppF}\n2. ZONES D'AVANTAGE — où dominer sur le terrain\n3. PLAN OFFENSIF — 3 stratégies d'attaque concrètes\n4. PLAN DÉFENSIF — comment neutraliser l'adversaire\n5. CLÉS DU MATCH — points décisifs\n6. RECOMMANDATION COACH — conseil prioritaire\n${playerDetails?'\nTiens compte des qualités et faiblesses individuelles dans ton analyse.':''}`
+      'Tu es un analyste tactique UEFA Pro. Réponds en français. Utilise des titres ## pour chaque section et des tirets - pour les points. Pas d\'astérisques isolés.',
+      `## CONTEXTE\nMon équipe: ${T.myF} | Forces: ${T.myStr||'N/A'} | Faiblesses: ${T.myWk||'N/A'}\nAdversaire: ${T.oppF} | Forces: ${T.oppStr||'N/A'} | Faiblesses: ${T.oppWk||'N/A'}\n${playerDetails?'\n## COMPOSITION TITULAIRE\n'+playerDetails:cLines?'\n## COMPOSITION\n'+cLines:''}\n${subPlayers?'\n## REMPLAÇANTS DISPONIBLES\n'+subPlayers:''}\n\nFournis l\'analyse suivante:\n\n## 1. DUEL DE SYSTÈMES\nAvantages et risques du ${T.myF} face au ${T.oppF}\n\n## 2. ZONES D'AVANTAGE\nOù dominer sur le terrain\n\n## 3. PLAN OFFENSIF\n3 stratégies d'attaque concrètes\n\n## 4. PLAN DÉFENSIF\nComment neutraliser l'adversaire\n\n## 5. CLÉS DU MATCH\nPoints décisifs à surveiller\n\n## 6. RECOMMANDATION COACH\nConseil prioritaire${subPlayers?'\n\n## 7. GESTION DES REMPLAÇANTS\nQuand et comment utiliser les remplaçants disponibles':''}`
     );
     T.tab='analysis';pgTactical();
   }catch(e){
