@@ -131,6 +131,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .ai-in{flex:1;background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:8px 11px;color:var(--txt);font-family:var(--fb);font-size:12px;outline:none}
 .ai-in:focus{border-color:var(--acc)}
 .divider{height:1px;background:var(--bord);margin:14px 0}
+/* ── Résultats IA formatés ── */
+.ai-result-body{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+.ai-section-title{font-family:var(--fd);font-size:14px;font-weight:800;color:var(--acc);padding:10px 0 4px;border-bottom:1px solid var(--acc);margin-top:6px;letter-spacing:.02em}
+.ai-sub-title{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--txt);padding:6px 0 2px;margin-top:4px}
+.ai-p{font-size:13px;color:var(--txt2);line-height:1.65;margin:0}
+.ai-p strong,.ai-list strong,.ai-numbered strong,.ai-highlight strong{color:var(--txt);font-weight:700}
+.ai-list{margin:2px 0 2px 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.ai-list li{font-size:13px;color:var(--txt2);line-height:1.6;padding:5px 10px 5px 28px;position:relative;background:var(--bg2);border-radius:8px}
+.ai-list li::before{content:'▸';position:absolute;left:10px;color:var(--acc);font-size:11px;top:6px}
+.ai-numbered{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:13px;color:var(--txt2);line-height:1.6}
+.ai-num{min-width:22px;height:22px;background:var(--acc);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px}
+.ai-highlight{font-size:13px;color:var(--txt);line-height:1.6;padding:8px 12px;background:var(--bg2);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;margin:2px 0}
+.ai-sep{border:none;border-top:1px solid var(--bord);margin:6px 0}
+.ai-result-wrap{background:var(--bg2);border-radius:12px;padding:14px 16px;border:1px solid var(--bord);margin-top:8px}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:10px;text-align:center}
 .empty-ico{width:54px;height:54px;border-radius:14px;background:var(--surf);border:1px solid var(--bord);display:flex;align-items:center;justify-content:center}
 .sec-title{font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:10px}
@@ -351,6 +365,64 @@ function nav(page){
 }
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-ov').classList.toggle('open');}
 function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('open');}
+
+// ═══ FORMAT RÉSULTATS IA ══════════════════════════════════════
+function formatAI(text){
+  if(!text) return '';
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+
+  for(let raw of lines){
+    const line = raw.trim();
+    if(!line){ if(inList){html+='</ul>';inList=false;} html+=''; continue; }
+
+    // Titre niveau 1 : ## Titre
+    if(/^##\s+/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const t = line.replace(/^##\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<div class="ai-section-title">${t}</div>`;
+    }
+    // Titre niveau 2 : ### Titre
+    else if(/^###\s+/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const t = line.replace(/^###\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<div class="ai-sub-title">${t}</div>`;
+    }
+    // Ligne de séparation ---
+    else if(/^---+$/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      html+=`<hr class="ai-sep">`;
+    }
+    // Bullet point - ou *
+    else if(/^[-*•]\s+/.test(line)){
+      if(!inList){html+='<ul class="ai-list">';inList=true;}
+      const t = line.replace(/^[-*•]\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<li>${t}</li>`;
+    }
+    // Numérotation 1. 2. etc
+    else if(/^\d+\.\s+/.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const num = line.match(/^(\d+)\./)[1];
+      const t = line.replace(/^\d+\.\s+/,'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<div class="ai-numbered"><span class="ai-num">${num}</span><span>${t}</span></div>`;
+    }
+    // Emoji en début = badge coloré
+    else if(/^[🔴🟡🟢⚡🎯💡⚠️✅❌🏆👥🔥💪🧠📊]/u.test(line)){
+      if(inList){html+='</ul>';inList=false;}
+      const t = line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<div class="ai-highlight">${t}</div>`;
+    }
+    // Texte normal
+    else {
+      if(inList){html+='</ul>';inList=false;}
+      const t = line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      html+=`<p class="ai-p">${t}</p>`;
+    }
+  }
+  if(inList) html+='</ul>';
+  return `<div class="ai-result-body">${html}</div>`;
+}
 
 // ═══ API ══════════════════════════════════════════════════════
 // ═══ API CALL — Groq (gratuit, direct depuis le navigateur) ══════════════════
@@ -616,7 +688,7 @@ async function genSuggestions(){
   const btn=document.getElementById('sug-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span> Analyse...`;}
   const txt=S.reports.slice(-5).map(r=>`Match vs ${r.opponent}: ${r.report||r.analysis||''}`).join('\n');
   try{const res=await callAI('Tu es un entraîneur football professionnel. Réponds en français.',`Analyse ces rapports et propose 3-4 thèmes d'entraînement prioritaires avec des exercices concrets:\n\n${txt}`);
-  const el=document.getElementById('sug-res');if(el)el.innerHTML=`<p style="font-size:12px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;margin-top:6px">${res}</p>`;}catch(e){}
+  const el=document.getElementById('sug-res');if(el)el.innerHTML=`<div class="ai-result-wrap">${formatAI(res)}</div>`;}catch(e){}
   if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Ré-analyser';}
 }
 
@@ -734,7 +806,7 @@ async function analyzePlayer(id){
   try{
     const res=await callAI('Tu es un recruteur et analyste football professionnel. Réponds en français.',
       `Analyse ce profil joueur.\nNom:${p.name} | Poste:${p.position} | Pied:${p.foot||'D'} | Âge:${p.age||'?'}\nAttributs: ${skTxt||'Non renseignés'}\nPoints forts: ${p.strengths?.join(', ')||'N/A'}\nAxes progression: ${p.weaknesses?.join(', ')||'N/A'}\n\nFournis:\n1. PROFIL (2 phrases)\n2. POSTE IDÉAL et postes alternatifs possibles avec justification\n3. POINTS FORTS à développer\n4. AXES PRIORITAIRES à travailler\n5. EXERCICES RECOMMANDÉS (2-3 exercices spécifiques)\n6. POTENTIEL sur 12 mois`);
-    const el=document.getElementById('pa-res');if(el)el.innerHTML=`<p style="font-size:12px;color:var(--txt2);line-height:1.6;white-space:pre-wrap">${res}</p>`;
+    const el=document.getElementById('pa-res');if(el)el.innerHTML=`<div class="ai-result-wrap">${formatAI(res)}</div>`;
   }catch(e){const el=document.getElementById('pa-res');if(el)el.textContent='Erreur de connexion.';}
   if(btn){btn.disabled=false;btn.innerHTML=ic('refresh',12)+' Ré-analyser';}
 }
@@ -839,7 +911,7 @@ async function genComp(){
     const res=await callAI('Tu es un entraîneur UEFA Pro. Propose une composition optimale en français.',
       `Compose la meilleure équipe avec ces joueurs.\n${fChoice?`Système demandé: ${fChoice}`:'Choisis le meilleur système.'}\n${ctx?`Contexte: ${ctx}`:''}\n\nJOUEURS:\n${pList}\n\nFournis:\nSYSTÈME: [ex: 4-3-3]\nRAISON SYSTÈME: [2 phrases]\n\nTITULAIRES:\nGardien: [Nom] – [justification]\nDéfense: [Noms + postes] – [justification]\nMilieu: [Noms + postes] – [justification]\nAttaque: [Noms + postes] – [justification]\n\nREMPLAÇANTS: [Noms + rôles]\n\nFORCES DE CETTE COMPO: [3 points]\nRISQUES: [2 compensations]\nCONSIGNES COLLECTIVES: [3 directives]`);
     const el=document.getElementById('comp-res');
-    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:7px;margin-bottom:11px"><span class="tag t-g">${ic('zap',11)} Composition IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.7;white-space:pre-wrap">${res}</div></div>`;
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:7px;margin-bottom:11px"><span class="tag t-g">${ic('zap',11)} Composition IA</span></div>${formatAI(res)}</div>`;
   }catch(e){const el=document.getElementById('comp-res');if(el)el.innerHTML=`<div class="card"><p style="color:var(--red);font-size:13px">Erreur. Réessayez.</p></div>`;}
   if(btn){btn.disabled=false;btn.innerHTML=ic('zap')+' Recomposer';}
 }
@@ -1160,7 +1232,7 @@ function parseAnalysis(text){
   flushSection();
   // If nothing was parsed with sections, just render as card
   if(!html && text.trim()){
-    html=`<div class="card"><p style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${text}</p></div>`;
+    html=`<div class="card">${formatAI(text)}</div>`;
   }
   return html;
 }
@@ -1231,7 +1303,7 @@ async function genPM(){
     const res=await callAI('Tu es un coach UEFA Pro. Génère une analyse d\'avant-match complète et professionnelle en français.',
       `Avant-match:\nMON ÉQUIPE: ${myForm}${pList?' | Joueurs: '+pList:''}\nADVERSAIRE: ${oppName} en ${oppForm}${oppInfo?' | '+oppInfo:''}\n${ctx?'CONTEXTE: '+ctx:''}\n\n1. RÉSUMÉ ADVERSAIRE (3-4 phrases)\n2. POINTS FORTS ADVERSES (3-4 éléments)\n3. FAIBLESSES À EXPLOITER (3-4 zones)\n4. PLAN DE JEU (offensif + défensif)\n5. COMPOSITION SUGGÉRÉE pour ${myForm}\n6. CONSIGNES D'AVANT-MATCH (5-6 points)\n7. CLÉS DU MATCH (2-3 éléments décisifs)`);
     const el=document.getElementById('pm-res');
-    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('zap',13)} vs ${oppName}</div><span class="tag t-g" style="font-size:9px">IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${res}</div></div>`;
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('zap',13)} vs ${oppName}</div><span class="tag t-g" style="font-size:9px">IA</span></div>${formatAI(res)}</div>`;
   }catch(e){
     if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
   }
@@ -1263,7 +1335,7 @@ async function genSpeech(){
     const res=await callAI('Tu es un entraîneur de football charismatique. Tu écris des causeries d\'avant-match authentiques, émotionnelles et efficaces en français.',
       `Causerie d'avant-match.\nAdversaire: ${opp||'l\'adversaire'} | Enjeu: ${enj} | Contexte: ${ctx||'standard'} | Ton: ${tone} | Durée: ${dur} | Message clé: ${msg||'la victoire'}\n\nÉcris une causerie structurée (intro accrocheuse → analyse → message clé → conclusion motivante), authentique, adaptée au ton demandé, directement adressée aux joueurs.`);
     const el=document.getElementById('sp-res');
-    if(el)el.innerHTML=`<div class="card card-gold"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('mic',13)} Causerie vs ${opp||'l\'adversaire'}</div><span class="tag t-go" style="font-size:9px">IA</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.85;white-space:pre-wrap;font-style:italic">"${res}"</div></div>`;
+    if(el)el.innerHTML=`<div class="card card-gold"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-family:var(--fd);font-size:14px;font-weight:700">${ic('mic',13)} Causerie vs ${opp||'l\'adversaire'}</div><span class="tag t-go" style="font-size:9px">IA</span></div>${formatAI(res)}</div>`;
   }catch(e){
     if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
   }
@@ -1303,7 +1375,7 @@ async function genSit(){
       `SITUATION: ${min}e min | Score: ${ms}-${os} (${parseInt(ms)>parseInt(os)?'je mène':parseInt(ms)<parseInt(os)?'je suis mené':'égalité'})\n🔵 Mon équipe: ${mf} | 🔴 Adversaire: ${of}\nSituation: ${ctx}${bench?'\nBanc: '+bench:''}${iss?'\nProblèmes: '+iss:''}\n\n1. LECTURE (2-3 phrases)\n2. CHANGEMENTS TACTIQUES\n3. SUBSTITUTIONS et pourquoi\n4. CONSIGNES IMMÉDIATES (4-5 points)\n5. GESTION DU TEMPS RESTANT\n6. SCÉNARIO IDÉAL`);
     const sc=parseInt(ms)>parseInt(os)?'t-g':parseInt(ms)<parseInt(os)?'t-r':'t-go';
     const el=document.getElementById('si-res');
-    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:9px;margin-bottom:13px"><div style="font-family:var(--fd);font-size:20px;font-weight:800">${ms} – ${os}</div><span class="tag ${sc}">${min}'</span><span style="font-size:11px;color:var(--txt3)">${mf} vs ${of}</span></div><div style="font-size:13px;color:var(--txt2);line-height:1.75;white-space:pre-wrap">${res}</div></div>`;
+    if(el)el.innerHTML=`<div class="card"><div style="display:flex;align-items:center;gap:9px;margin-bottom:13px"><div style="font-family:var(--fd);font-size:20px;font-weight:800">${ms} – ${os}</div><span class="tag ${sc}">${min}'</span><span style="font-size:11px;color:var(--txt3)">${mf} vs ${of}</span></div>${formatAI(res)}</div>`;
   }catch(e){
     if(!['NO_KEY','CLE_INVALIDE','NETWORK_ERROR','CORS_ERROR'].includes(e.message)) showToast('Erreur IA : '+e.message,'#ff4d6d');
   }
@@ -1339,7 +1411,7 @@ function pgReports(){
   const c=document.getElementById('content');
   c.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-p" onclick="openAddReport()">${ic('plus')} Nouveau rapport</button></div>
   ${!S.reports.length?`<div class="empty"><div class="empty-ico">${ic('clip',26)}</div><div style="font-family:var(--fd);font-size:16px;font-weight:700">Aucun rapport</div><button class="btn btn-p" style="margin-top:12px" onclick="openAddReport()">${ic('plus')} Créer</button></div>`:
-  `<div style="display:flex;flex-direction:column;gap:11px">${S.reports.map(r=>`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="display:flex;align-items:center;gap:7px"><div style="width:32px;height:32px;border-radius:7px;background:var(--acc-d);display:flex;align-items:center;justify-content:center">${ic('activity',13).replace('currentColor','var(--acc)')}</div><div><div style="font-family:var(--fd);font-size:12px;font-weight:700">vs ${r.opponent}</div><div style="font-size:10px;color:var(--txt3)">${r.date}${r.score?' · '+r.score:''}</div></div></div><div style="display:flex;gap:3px"><span class="tag t-g" style="font-size:9px">Analysé</span><button class="btn-ico" style="padding:2px;color:var(--red)" onclick="delReport('${r.id}')">${ic('trash',11)}</button></div></div><div style="background:var(--bg2);border:1px solid var(--bord);border-radius:var(--rs);padding:9px"><p style="font-size:12px;color:var(--txt2);line-height:1.65;white-space:pre-wrap">${r.analysis}</p></div></div>`).join('')}</div>`}`;
+  `<div style="display:flex;flex-direction:column;gap:11px">${S.reports.map(r=>`<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="display:flex;align-items:center;gap:7px"><div style="width:32px;height:32px;border-radius:7px;background:var(--acc-d);display:flex;align-items:center;justify-content:center">${ic('activity',13).replace('currentColor','var(--acc)')}</div><div><div style="font-family:var(--fd);font-size:12px;font-weight:700">vs ${r.opponent}</div><div style="font-size:10px;color:var(--txt3)">${r.date}${r.score?' · '+r.score:''}</div></div></div><div style="display:flex;gap:3px"><span class="tag t-g" style="font-size:9px">Analysé</span><button class="btn-ico" style="padding:2px;color:var(--red)" onclick="delReport('${r.id}')">${ic('trash',11)}</button></div></div><div class="ai-result-wrap">${formatAI(r.analysis)}</div></div>`).join('')}</div>`}`;
 }
 function openAddReport(){openMod(`<div class="mh"><span class="mt">Nouveau rapport</span><button class="btn-ico" onclick="closeMod()">&#x2715;</button></div><div class="mb"><div class="g2"><div class="fg"><label class="fl">Adversaire</label><input class="fi" id="rf-o" placeholder="FC Rivaux"></div><div class="fg"><label class="fl">Score</label><input class="fi" id="rf-sc" placeholder="2-1"></div><div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="rf-d" value="${new Date().toISOString().split('T')[0]}"></div></div><div class="fg"><label class="fl">Rapport *</label><textarea class="fta" style="min-height:110px" id="rf-t" placeholder="Performances individuelles, phases de jeu, buts, erreurs..."></textarea></div><div style="background:var(--acc-d);border:1px solid rgba(0,229,160,.18);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--txt2)">${ic('zap',10)} L'IA analysera et mettra à jour les profils joueurs.</div></div><div class="mf"><button class="btn btn-s" onclick="closeMod()">Annuler</button><button class="btn btn-p" id="rf-btn" onclick="saveReport()">${ic('zap')} Analyser</button></div>`,'modal-lg');}
 async function saveReport(){const t=document.getElementById('rf-t')?.value?.trim();if(!t)return;const btn=document.getElementById('rf-btn');if(btn){btn.disabled=true;btn.innerHTML=`<span class="spin">⏳</span>`;}
