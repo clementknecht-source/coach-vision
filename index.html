@@ -277,6 +277,23 @@ const SKILLS=[
   {key:'acceleration',label:'Accélération',color:'#f97316'},
   {key:'anticipation',label:'Anticipation',color:'#a78bfa'},
 ];
+// Attributs spécifiques Gardien de but
+const GK_SKILLS=[
+  {key:'gk_reflexes',label:'Réflexes',color:'#ff4d6d'},
+  {key:'gk_positioning',label:'Placement dans les buts',color:'#00e5a0'},
+  {key:'gk_aerial',label:'Maîtrise aérienne',color:'#4d9fff'},
+  {key:'gk_sweeper',label:'Jeu au pied / Sweeper',color:'#f97316'},
+  {key:'gk_distribution',label:'Distribution / Relance',color:'#a78bfa'},
+  {key:'gk_onevsone',label:'Face-à-face',color:'#f5c842'},
+  {key:'gk_communication',label:'Communication défensive',color:'#34d399'},
+  {key:'gk_penalty',label:'Arrêts penalties',color:'#e879f9'},
+  {key:'gk_hands',label:'Utilisation des mains',color:'#60a5fa'},
+  {key:'gk_courage',label:'Courage / Sortie',color:'#fb923c'},
+  {key:'leadership',label:'Leadership',color:'#e879f9'},
+  {key:'attitude',label:'Attitude / Sérieux',color:'#00e5a0'},
+  {key:'anticipation',label:'Anticipation',color:'#a78bfa'},
+];
+function getSkills(position){ return position==='Gardien' ? GK_SKILLS : SKILLS; }
 const PC={'Gardien':'#f5c842','Défenseur Central':'#4d9fff','Arrière Gauche':'#60a5fa','Arrière Droit':'#60a5fa','Milieu Défensif':'#a78bfa','Milieu Central':'#a78bfa','Milieu Offensif':'#f97316','Milieu Gauche':'#a78bfa','Milieu Droit':'#a78bfa','Ailier Gauche':'#00e5a0','Ailier Droit':'#00e5a0','Avant-Centre':'#ff4d6d','Piston Gauche':'#34d399','Piston Droit':'#34d399'};
 
 // ═══ NAV CONFIG ═══════════════════════════════════════════════
@@ -531,7 +548,7 @@ function closeMod(){document.getElementById('mod-ov').style.display='none';}
 function initials(n){return(n||'').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();}
 function pCol(pos){return PC[pos]||'#00e5a0';}
 function skColor(v){return v>=8?'#00e5a0':v>=6?'#f5c842':v>=4?'#f97316':'#ff4d6d';}
-function ovRating(p){const vals=SKILLS.map(s=>p.skills?.[s.key]||0).filter(v=>v>0);return vals.length?Math.round(vals.reduce((a,b)=>a+b)/vals.length*10)/10:0;}
+function ovRating(p){const sk=getSkills(p.position);const vals=sk.map(s=>p.skills?.[s.key]||0).filter(v=>v>0);return vals.length?Math.round(vals.reduce((a,b)=>a+b)/vals.length*10)/10:0;}
 function portrait(p,sz=44){const col=pCol(p.position);return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:${Math.floor(sz*.32)}px;font-weight:800;color:${col};flex-shrink:0">${initials(p.name)}</div>`;}
 function rBar(label,val,col){return `<div class="rating-row"><div class="rating-lbl">${label}</div><div class="rating-bar"><div class="rating-fill" style="width:${val*10}%;background:${col||skColor(val)}"></div></div><div class="rating-num" style="color:${skColor(val)}">${val}</div></div>`;}
 function pitchSVG(fk,assign={},color='#00e5a0',inter=false,pid='p1'){
@@ -787,12 +804,12 @@ function viewPlayer(id){
         ${p.bio?`<p style="font-size:12px;color:var(--txt2);line-height:1.5;border-top:1px solid var(--bord);padding-top:10px">${p.bio}</p>`:''}
       </div>
       <div class="card">
-        <div class="sec-title">Attributs Techniques & Physiques</div>
-        ${SKILLS.slice(0,10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],sk.color):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Aucun attribut renseigné.</p>'}
+        <div class="sec-title">${p.position==='Gardien'?'⛳ Attributs Gardien':'⚽ Attributs Techniques & Physiques'}</div>
+        ${getSkills(p.position).slice(0,p.position==='Gardien'?10:10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],sk.color):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Aucun attribut renseigné.</p>'}
       </div>
       <div class="card">
-        <div class="sec-title">Mental & Caractère</div>
-        ${SKILLS.slice(10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],'#e879f9'):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Non renseigné.</p>'}
+        <div class="sec-title">${p.position==='Gardien'?'🧠 Mental & Qualités GK':'🧠 Mental & Caractère'}</div>
+        ${getSkills(p.position).slice(10).map(sk=>p.skills?.[sk.key]?rBar(sk.label,p.skills[sk.key],'#e879f9'):'').join('')||'<p style="font-size:12px;color:var(--txt3)">Non renseigné.</p>'}
         ${p.character_notes?`<p style="font-size:12px;color:var(--txt2);line-height:1.5;margin-top:9px;border-top:1px solid var(--bord);padding-top:9px">${p.character_notes}</p>`:''}
       </div>
     </div>
@@ -844,7 +861,7 @@ function openPForm(editId=null){
       <div class="g2">
         <div class="fg"><label class="fl">Nom *</label><input class="fi" id="pf-n" value="${gv('name')}" placeholder="Pierre Martin"></div>
         <div class="fg"><label class="fl">Numéro</label><input class="fi" type="number" id="pf-num" value="${gv('number')}" placeholder="10"></div>
-        <div class="fg"><label class="fl">Poste *</label><select class="fs" id="pf-pos">${POSITIONS.map(pos=>`<option${gv('position')===pos?' selected':''}>${pos}</option>`).join('')}</select></div>
+        <div class="fg"><label class="fl">Poste *</label><select class="fs" id="pf-pos" onchange="updateFormSkills(this.value)">${POSITIONS.map(pos=>`<option${gv('position')===pos?' selected':''}>${pos}</option>`).join('')}</select></div>
         <div class="fg"><label class="fl">Pied</label><select class="fs" id="pf-foot"><option${gv('foot')==='Droit'?' selected':''}>Droit</option><option${gv('foot')==='Gauche'?' selected':''}>Gauche</option><option${gv('foot')==='Les deux'?' selected':''}>Les deux</option></select></div>
         <div class="fg"><label class="fl">Âge</label><input class="fi" type="number" id="pf-age" value="${gv('age')}" placeholder="17"></div>
         <div class="fg"><label class="fl">Taille (cm)</label><input class="fi" type="number" id="pf-h" value="${gv('height')}" placeholder="178"></div>
@@ -853,9 +870,9 @@ function openPForm(editId=null){
       </div>
       <div class="fg"><label class="fl">Bio / Historique</label><textarea class="fta" id="pf-bio" placeholder="Clubs précédents, formation...">${gv('bio')}</textarea></div>
     </div>
-    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Attributs — noter sur 10</div>
-      ${SKILLS.map(sk=>`<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><label style="font-size:12px;color:var(--txt2)">${sk.label}</label><span style="font-size:13px;font-weight:800;color:${sk.color};font-family:var(--fd)" id="sv-${sk.key}">${gsk(sk.key)}</span></div><input type="range" min="1" max="10" value="${gsk(sk.key)}" id="sk-${sk.key}" oninput="document.getElementById('sv-${sk.key}').textContent=this.value" style="accent-color:${sk.color}"></div>`).join('')}
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px" id="skills-block">
+      <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px" id="skills-title">${gv('position')==='Gardien'?'⛳ Attributs Gardien — noter sur 10':'⚽ Attributs — noter sur 10'}</div>
+      <div id="skills-list">${getSkills(gv('position')||'Milieu Central').map(sk=>`<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><label style="font-size:12px;color:var(--txt2)">${sk.label}</label><span style="font-size:13px;font-weight:800;color:${sk.color};font-family:var(--fd)" id="sv-${sk.key}">${gsk(sk.key)}</span></div><input type="range" min="1" max="10" value="${gsk(sk.key)}" id="sk-${sk.key}" oninput="document.getElementById('sv-${sk.key}').textContent=this.value" style="accent-color:${sk.color}"></div>`).join('')}</div>
     </div>
     <div style="background:var(--surf2);border-radius:var(--rs);padding:11px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:9px">Forces & axes</div>
@@ -882,9 +899,26 @@ function openPForm(editId=null){
     <button class="btn btn-p" onclick="savePlayer('${editId||''}')">${ic('check')} ${p?'Sauvegarder':'Créer'}</button>
   </div>`,'modal-lg');
 }
+function updateFormSkills(pos){
+  const isGK=pos==='Gardien';
+  const skillsList=document.getElementById('skills-list');
+  const skillsTitle=document.getElementById('skills-title');
+  if(!skillsList)return;
+  // Sauvegarde les valeurs actuelles avant de changer
+  const oldVals={};[...SKILLS,...GK_SKILLS].forEach(sk=>{const el=document.getElementById('sk-'+sk.key);if(el)oldVals[sk.key]=el.value;});
+  if(skillsTitle)skillsTitle.textContent=isGK?'⛳ Attributs Gardien — noter sur 10':'⚽ Attributs — noter sur 10';
+  skillsList.innerHTML=getSkills(pos).map(sk=>{
+    const val=oldVals[sk.key]||5;
+    return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><label style="font-size:12px;color:var(--txt2)">${sk.label}</label><span style="font-size:13px;font-weight:800;color:${sk.color};font-family:var(--fd)" id="sv-${sk.key}">${val}</span></div><input type="range" min="1" max="10" value="${val}" id="sk-${sk.key}" oninput="document.getElementById('sv-${sk.key}').textContent=this.value" style="accent-color:${sk.color}"></div>`;
+  }).join('');
+}
+
 function savePlayer(editId){
   const name=document.getElementById('pf-n')?.value?.trim();if(!name)return;
-  const skills={};SKILLS.forEach(sk=>{const v=document.getElementById('sk-'+sk.key);if(v)skills[sk.key]=parseInt(v.value);});
+  const pos=document.getElementById('pf-pos')?.value;
+  const skills={};
+  // Collecte tous les attributs possibles (champ + GK)
+  [...SKILLS,...GK_SKILLS].forEach(sk=>{const v=document.getElementById('sk-'+sk.key);if(v)skills[sk.key]=parseInt(v.value);});
   const gv=(id,t='s')=>{const el=document.getElementById(id);if(!el)return undefined;const v=el.value.trim();if(!v)return undefined;return t==='n'?parseInt(v):v;};
   const pl={id:editId||String(Date.now()),name,number:gv('pf-num'),position:document.getElementById('pf-pos')?.value,foot:document.getElementById('pf-foot')?.value,age:gv('pf-age','n'),height:gv('pf-h','n'),weight:gv('pf-w','n'),nationality:gv('pf-nat'),bio:gv('pf-bio'),skills,strengths:document.getElementById('pf-str')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[],weaknesses:document.getElementById('pf-wk')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[],matches:gv('pf-m','n'),goals:gv('pf-g','n'),assists:gv('pf-a','n'),yellow:gv('pf-y','n'),coach_notes:gv('pf-cn'),character_notes:gv('pf-chr')};
   if(editId)S.players=S.players.map(p=>p.id===editId?pl:p);else S.players.push(pl);
