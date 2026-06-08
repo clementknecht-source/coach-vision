@@ -353,38 +353,70 @@ function toggleSB(){document.getElementById('sidebar').classList.toggle('open');
 function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('open');}
 
 // ═══ API ══════════════════════════════════════════════════════
-// ═══ API CALL — via proxy local /api/claude ══════════════════
+// ═══ API CALL — Groq (gratuit, direct depuis le navigateur) ══════════════════
+function getGroqKey(){
+  return localStorage.getItem('groq_api_key') || '';
+}
+
+function showGroqSetup(){
+  const existing = document.getElementById('groq-setup-modal');
+  if(existing) return;
+  const modal = document.createElement('div');
+  modal.id = 'groq-setup-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#1a1a2e;border-radius:16px;padding:32px;max-width:420px;width:100%;border:1px solid #00e5a0;">
+      <h2 style="color:#00e5a0;margin:0 0 12px;">🔑 Clé API Groq</h2>
+      <p style="color:#aaa;margin:0 0 20px;font-size:14px;">Entre ta clé Groq pour activer l'IA. Elle sera sauvegardée sur cet appareil uniquement.<br><br>
+      Obtiens une clé gratuite sur <a href="https://console.groq.com" target="_blank" style="color:#00e5a0;">console.groq.com</a></p>
+      <input id="groq-key-input" type="text" placeholder="gsk_..." style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid #333;background:#0d0d1a;color:#fff;font-size:14px;margin-bottom:16px;">
+      <button onclick="saveGroqKey()" style="width:100%;padding:12px;background:#00e5a0;border:none;border-radius:8px;color:#000;font-weight:700;font-size:16px;cursor:pointer;">Enregistrer</button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveGroqKey(){
+  const key = document.getElementById('groq-key-input').value.trim();
+  if(!key.startsWith('gsk_')){ showToast('Clé invalide (doit commencer par gsk_)', '#ff4d6d'); return; }
+  localStorage.setItem('groq_api_key', key);
+  document.getElementById('groq-setup-modal')?.remove();
+  showToast('Clé enregistrée ! ✓', '#00e5a0');
+}
+
 async function callAI(sys, usr, maxTok=1400){
-  // Détecte si on est sur le serveur local ou sur Netlify
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const endpoint = isLocal ? '/api/claude' : 'https://api.anthropic.com/v1/messages';
-  const headers = {'Content-Type': 'application/json'};
-  if(!isLocal) headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  const key = getGroqKey();
+  if(!key){ showGroqSetup(); throw new Error('NO_KEY'); }
 
   let r;
   try {
-    r = await fetch(endpoint, {
+    r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key,
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: maxTok,
-        system: sys,
-        messages: [{ role: 'user', content: usr }]
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: usr }
+        ]
       })
     });
   } catch(err) {
-    showToast('Erreur réseau. Serveur démarré ? (node server.js)', '#ff4d6d');
+    showToast('Erreur réseau. Vérifie ta connexion internet.', '#ff4d6d');
     throw new Error('NETWORK_ERROR');
   }
   if(!r.ok){
     const e = await r.json().catch(()=>({}));
     const msg = e?.error?.message || 'Erreur ' + r.status;
+    if(r.status === 401){ localStorage.removeItem('groq_api_key'); showGroqSetup(); }
     showToast('Erreur IA : ' + msg, '#ff4d6d');
     throw new Error(msg);
   }
   const d = await r.json();
-  return d.content?.[0]?.text || '';
+  return d.choices?.[0]?.message?.content || '';
 }
 
 function showToast(msg, color='#00e5a0'){
